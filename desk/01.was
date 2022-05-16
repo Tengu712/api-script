@@ -1,0 +1,62 @@
+mod kernel32
+  GetModuleHandleW
+    args
+      ptr
+    return
+      ptr
+mod user32
+  RegisterClassExW
+    args
+      ptr
+    return
+      i4
+  AdjustWindowRectEx
+    args
+      ptr
+      i4
+      i4
+      i4
+    return
+      i4
+fun create_window
+  args
+    i4 width
+    i4 height
+  logic
+    ptr h_inst
+      call_assert GetModuleHandleA
+        args
+          nullptr
+        error
+          nullptr
+    struct wcex
+      u4          ; cbSize
+      u4 3        ; style
+      ptr nullptr ; lpfnWndProc
+      i4 0        ; cbClsExtra
+      i4 0        ; cbWndExtra
+      ptr h_inst  ; hInstance
+      ptr nullptr ; hIcon
+      ptr nullptr ; hCursor
+      ptr nullptr ; hbrBackground
+      ptr nullptr ; lpszMenuName
+      ptr u"WindowClass" ; lpszClassName
+      ptr nullptr ; hIconSm
+    call_assert RegisterClassExW
+      args
+        ptr_of wcex
+      error
+        0
+    struct rect
+      i4 0      ; left
+      i4 0      ; top
+      i4 width  ; right
+      i4 height ; bottom
+    call_assert AdjustWindowRectEx
+      args
+        ptr_of rect
+        0x00CA0000
+        0
+        0
+      error
+        0

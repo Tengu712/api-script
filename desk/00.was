@@ -1,0 +1,9 @@
+// Hello World with MessageBoxA
+fun hello_world
+  args
+  logic
+    call user32.MessageBoxA
+      ptr nullptr
+      ptr "Hello World"
+      ptr "Title"
+      i32 0
