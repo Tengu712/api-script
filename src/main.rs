@@ -9,17 +9,11 @@ enum Token {
 }
 fn analyze_tokens(code: &String) -> Vec<Token> {
     let v = Vec::new();
-    let tmp = String::new();
+    let mut tmp = String::new();
+    let mut indent = 0;
     for c in code.chars() {
         match c {
-            ' ' | '\n' => {
-                if c == ' ' {
-                    println!("space");
-                } else {
-                    println!("newline");
-                }
-            }
-            _ => println!("{}", c),
+            _ => tmp.push(c),
         }
     }
     v
@@ -32,6 +26,7 @@ fn main() {
         return;
     }
     for i in args {
-        
+        println!("{}", i);
+        analyze_tokens(&i);
     }
 }
