@@ -1,4 +1,4 @@
-// Hello World with MessageBoxA
+# Hello World with MessageBoxA
 fun hello_world
   args
   logic
