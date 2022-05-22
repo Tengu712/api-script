@@ -1,4 +1,4 @@
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Token {
     // System
     Indent,
@@ -9,6 +9,7 @@ pub enum Token {
     Logic,
     Call,
     Ptr,
+    Nullptr,
     I32,
     U32,
     // Data
@@ -26,6 +27,7 @@ impl Token {
             "logic" => Logic,
             "call" => Call,
             "ptr" => Ptr,
+            "nullptr" => Nullptr,
             "i32" => I32,
             "u32" => U32,
             _ => {
@@ -90,18 +92,10 @@ fn split_line(trg: String) -> (Vec<String>, usize) {
     }
     (v, num_spaces)
 }
-pub fn analyze_tokens_from_file(path: &String) -> Vec<Token> {
-    // Open file
-    use std::{
-        fs::File,
-        io::{BufRead, BufReader},
-    };
-    let reader = BufReader::new(File::open(path).unwrap());
-    // Analyze each line
+pub fn analyze_tokens(lines: Vec<String>) -> Vec<Token> {
     let mut v = Vec::new();
     let mut indent = 0;
-    for line_opt in reader.lines() {
-        let line = line_opt.unwrap();
+    for line in lines {
         let (words, num_spaces) = split_line(line);
         if words.len() > 0 {
             if num_spaces > indent {
@@ -116,4 +110,13 @@ pub fn analyze_tokens_from_file(path: &String) -> Vec<Token> {
         }
     }
     v
+}
+pub fn analyze_tokens_from_file(path: &String) -> Vec<Token> {
+    use std::{
+        fs::File,
+        io::{BufRead, BufReader},
+    };
+    let reader = BufReader::new(File::open(path).unwrap());
+    let lines = reader.lines().map(|n| n.unwrap()).collect();
+    analyze_tokens(lines)
 }

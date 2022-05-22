@@ -1,4 +1,6 @@
 mod lexer;
+#[cfg(test)]
+mod test;
 
 fn main() {
     let args = std::env::args().collect::<Vec<String>>();
