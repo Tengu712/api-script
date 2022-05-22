@@ -9,3 +9,23 @@ Win32APIはDLLで提供されている。ということは、DLLが扱える言
 Win32API is served with DLL files. So we can use Win32API in any language that can link DLL.
 
 The repository manages the cross compiler of the abstract script that's specialized to use Win32API.
+
+## 文法
+
+以下にBNF記法によって文法を示す。
+
+Grammer written in BNF is shown below.
+
+```
+<Program> ::= <Block>$
+<Block> ::= fun <Function> (<Block> | "")
+<Type> ::= ptr | i32 | u32
+<Data> ::= nullptr | str | int | float | id
+<Function> ::= id
+  (indent args indent <Args> | "")
+  (indent logic indent <Logic> | "")
+  (indent return <Type> | "")
+<Logic> ::= <Call>
+<Call> ::= call id (indent <CallArgs> | "")
+<CallArgs> ::= <Type> <Data> (<CallArgs> | "")
+```

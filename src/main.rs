@@ -11,7 +11,6 @@ fn main() {
     let mut itr = args.iter();
     let _ = itr.next();
     for i in itr {
-        let tokens = lexer::analyze_tokens_from_file(&i);
-        println!("{:?}", tokens);
+        let _ = lexer::analyze_tokens_from_file(&i);
     }
 }

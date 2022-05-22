@@ -1,11 +1,9 @@
 use super::lexer::{Token::*, *};
 
-#[test]
-fn lexer_test1() {
-    let code: &'static str = "
+#[cfg(test)]
+const CODE1: &'static str = "
 # Hello World with MessageBoxA
 fun hello_world
-  args
   logic
     call user32.MessageBoxA
       ptr nullptr
@@ -13,11 +11,13 @@ fun hello_world
       ptr \"Title\"
       i32 0
 ";
+
+#[test]
+fn lexer_test1() {
     let expect = [
         Fun,
         Id(String::from("hello_world")),
         Indent,
-        Args,
         Logic,
         Indent,
         Call,
@@ -31,9 +31,11 @@ fun hello_world
         Str(String::from("\"Title\"")),
         I32,
         Int(String::from("0")),
-    ];
+    ]
+    .into_iter()
+    .collect();
     assert_eq!(
-        analyze_tokens(code.split('\n').map(|n| String::from(n)).collect()),
-        expect
+        analyze_tokens(CODE1.split('\n').map(|n| String::from(n)).collect()),
+        Tokens::from(expect),
     );
 }

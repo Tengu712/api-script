@@ -2,17 +2,17 @@
 pub enum Token {
     // System
     Indent,
-    Outdent,
     // Symbol
     Fun,
     Args,
     Logic,
     Call,
+    // Type
     Ptr,
-    Nullptr,
     I32,
     U32,
     // Data
+    Nullptr,
     Str(String),
     Int(String),
     Float(String),
@@ -50,6 +50,23 @@ fn is_integer_literal(trg: &str) -> bool {
 }
 fn is_float_literal(trg: &str) -> bool {
     trg.parse::<f64>().is_ok()
+}
+#[derive(Debug, PartialEq)]
+pub struct Tokens {
+    tokens: Vec<Token>,
+    idx: usize,
+}
+impl Tokens {
+    pub fn from(tokens: Vec<Token>) -> Self {
+        Self { tokens, idx: 0 }
+    }
+    pub fn consume(&mut self) -> &Token {
+        if self.idx >= self.tokens.len() {
+            panic!("[Parser error] Try to consume EOF.")
+        }
+        self.idx += 1;
+        &self.tokens[self.idx]
+    }
 }
 /// A function to split line considering string literal
 /// and get number of spaces that's at the top of the line.
@@ -92,16 +109,14 @@ fn split_line(trg: String) -> (Vec<String>, usize) {
     }
     (v, num_spaces)
 }
-pub fn analyze_tokens(lines: Vec<String>) -> Vec<Token> {
+pub fn analyze_tokens(lines: Vec<String>) -> Tokens {
     let mut v = Vec::new();
     let mut indent = 0;
     for line in lines {
         let (words, num_spaces) = split_line(line);
         if words.len() > 0 {
-            if num_spaces > indent {
+            if num_spaces != indent {
                 v.push(Token::Indent);
-            } else if num_spaces < indent {
-                v.push(Token::Outdent);
             }
             indent = num_spaces;
         }
@@ -109,9 +124,9 @@ pub fn analyze_tokens(lines: Vec<String>) -> Vec<Token> {
             v.push(Token::from(&w));
         }
     }
-    v
+    Tokens::from(v)
 }
-pub fn analyze_tokens_from_file(path: &String) -> Vec<Token> {
+pub fn analyze_tokens_from_file(path: &String) -> Tokens {
     use std::{
         fs::File,
         io::{BufRead, BufReader},
