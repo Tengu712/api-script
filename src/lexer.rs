@@ -2,6 +2,7 @@
 pub enum Token {
     // System
     Indent,
+    Eof,
     // Symbol
     Fun,
     Args,
@@ -60,12 +61,35 @@ impl Tokens {
     pub fn from(tokens: Vec<Token>) -> Self {
         Self { tokens, idx: 0 }
     }
-    pub fn consume(&mut self) -> &Token {
+    pub fn look(&self) -> Option<&Token> {
+        self.tokens.get(self.idx)
+    }
+    pub fn consume(&mut self) {
         if self.idx >= self.tokens.len() {
-            panic!("[Parser error] Try to consume EOF.")
+            panic!("[Lexer error] Try to consume EOF.")
+        }
+        if cfg!(test) {
+            use std::io::Write;
+            let stdout = std::io::stdout();
+            let mut handle = stdout.lock();
+            let msg = format!("consume '{:?}'\n", self.tokens[self.idx]);
+            handle.write_all(msg.as_bytes()).unwrap();
         }
         self.idx += 1;
-        &self.tokens[self.idx]
+    }
+    pub fn consume_expect(&mut self, expect: Token) {
+        if let Some(token) = self.look() {
+            if std::mem::discriminant(token) == std::mem::discriminant(&expect) {
+                self.consume();
+            } else {
+                panic!(
+                    "[Lexer error] expected '{:?}', but found '{:?}'.",
+                    expect, token
+                );
+            }
+        } else {
+            panic!("[Lexer error] expected '{:?}', but no token found.", expect);
+        }
     }
 }
 /// A function to split line considering string literal
@@ -124,6 +148,8 @@ pub fn analyze_tokens(lines: Vec<String>) -> Tokens {
             v.push(Token::from(&w));
         }
     }
+    v.push(Token::Indent);
+    v.push(Token::Eof);
     Tokens::from(v)
 }
 pub fn analyze_tokens_from_file(path: &String) -> Tokens {

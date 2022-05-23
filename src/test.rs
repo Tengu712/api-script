@@ -1,4 +1,7 @@
-use super::lexer::{Token::*, *};
+use super::{
+    lexer::{Token::*, *},
+    parser::*,
+};
 
 #[cfg(test)]
 const CODE1: &'static str = "
@@ -38,4 +41,10 @@ fn lexer_test1() {
         analyze_tokens(CODE1.split('\n').map(|n| String::from(n)).collect()),
         Tokens::from(expect),
     );
+}
+
+#[test]
+fn parser_test1() {
+    let mut tokens = analyze_tokens(CODE1.split('\n').map(|n| String::from(n)).collect());
+    parse(&mut tokens);
 }

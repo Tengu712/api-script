@@ -24,8 +24,7 @@ Grammer written in BNF is shown below.
 <Function> ::= id
   (indent args indent <Args> | "")
   (indent logic indent <Logic> | "")
-  (indent return <Type> | "")
-<Logic> ::= <Call>
-<Call> ::= call id (indent <CallArgs> | "")
-<CallArgs> ::= <Type> <Data> (<CallArgs> | "")
+<Logic> ::= call <Call>
+<Call> ::= id (indent <CallArgs> | "")
+<CallArgs> ::= <Type> <Data> (indent | <CallArgs>)
 ```

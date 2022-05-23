@@ -1,4 +1,5 @@
 mod lexer;
+mod parser;
 #[cfg(test)]
 mod test;
 
@@ -11,6 +12,7 @@ fn main() {
     let mut itr = args.iter();
     let _ = itr.next();
     for i in itr {
-        let _ = lexer::analyze_tokens_from_file(&i);
+        let mut tokens = lexer::analyze_tokens_from_file(&i);
+        parser::parse(&mut tokens);
     }
 }
