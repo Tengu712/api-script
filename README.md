@@ -21,10 +21,8 @@ Grammer written in BNF is shown below.
 <Block> ::= fun <Function> (<Block> | "")
 <Type> ::= ptr | i32 | u32
 <Data> ::= nullptr | str | int | float | id
-<Function> ::= id
-  (indent args indent <Args> | "")
-  (indent logic indent <Logic> | "")
-<Logic> ::= call <Call>
+<Function> ::= id indent logic indent <Logic>
+<Logic> ::= call <Call> (indent | <Logic>)
 <Call> ::= id (indent <CallArgs> | "")
 <CallArgs> ::= <Type> <Data> (indent | <CallArgs>)
 ```
