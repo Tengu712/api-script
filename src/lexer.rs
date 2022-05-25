@@ -1,4 +1,4 @@
-#[derive(Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum Token {
     // System
     Indent,
@@ -64,7 +64,7 @@ impl Tokens {
     pub fn look(&self) -> Option<&Token> {
         self.tokens.get(self.idx)
     }
-    pub fn consume(&mut self) {
+    pub fn consume(&mut self) -> Token {
         if self.idx >= self.tokens.len() {
             panic!("[Lexer error] Try to consume EOF.")
         }
@@ -76,11 +76,12 @@ impl Tokens {
             handle.write_all(msg.as_bytes()).unwrap();
         }
         self.idx += 1;
+        self.tokens[self.idx - 1].clone()
     }
-    pub fn consume_expect(&mut self, expect: Token) {
+    pub fn consume_expect(&mut self, expect: Token) -> Token {
         if let Some(token) = self.look() {
             if std::mem::discriminant(token) == std::mem::discriminant(&expect) {
-                self.consume();
+                self.consume()
             } else {
                 panic!(
                     "[Lexer error] expected '{:?}', but found '{:?}'.",
