@@ -1,10 +1,10 @@
 use super::*;
 
-pub struct Cons(pub Box<Cell>, pub Box<Cell>);
+#[derive(Debug)]
 pub enum Cell {
     Nil,
     Atom(Token),
-    Pair(Cons),
+    Pair(Box<Cell>, Box<Cell>),
 }
 impl Cell {
     pub(super) fn box_nil() -> Box<Self> {
@@ -14,15 +14,19 @@ impl Cell {
         Box::new(Self::Atom(token))
     }
     pub(super) fn box_pair(x: Box<Cell>, y: Box<Cell>) -> Box<Self> {
-        Box::new(Self::Pair(Cons(x,y)))
+        Box::new(Self::Pair(x,y))
     }
 }
 macro_rules! cell_list {
-    [$($x:expr),+] => {
+    [$($x:expr),*] => {
         {
-            let mut list = Cons(Cell::box_nil(), Cell::box_nil());
-            $(list = Cons($x, Cell::Pair(list_rev));)+
-            list_rev
+            let mut v = Vec::<Box<Cell>>::new();
+            $(v.push($x);)*
+            let mut list = Cell::box_nil();
+            for i in v.into_iter().rev() {
+                list = Cell::box_pair(i, list);
+            }
+            list
         }
     };
 }

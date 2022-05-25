@@ -14,17 +14,18 @@ impl Tokens {
     }
     pub fn consume(&mut self) -> Token {
         if self.idx >= self.tokens.len() {
-            panic!("[Lexer error] Try to consume EOF.")
-        }
-        if cfg!(test) {
-            use std::io::Write;
-            let stdout = std::io::stdout();
-            let mut handle = stdout.lock();
-            let msg = format!("consume '{:?}'\n", self.tokens[self.idx]);
-            handle.write_all(msg.as_bytes()).unwrap();
+            panic!("[Lexer error] try to consume EOF.")
         }
         self.idx += 1;
         self.tokens[self.idx - 1].clone()
+    }
+    pub fn consume_indent(&mut self) -> usize {
+        let res = match self.look() {
+            Some(Indent(n)) => *n,
+            n => panic!("[Lexer error] expected indent, but found '{:?}'.", n),
+        };
+        let _ = self.consume();
+        res
     }
     pub fn consume_expect(&mut self, expect: Token) -> Token {
         if let Some(token) = self.look() {

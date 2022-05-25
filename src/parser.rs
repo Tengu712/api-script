@@ -1,6 +1,11 @@
 #[macro_use]
 pub mod cell;
 pub mod grammer;
+#[cfg(test)]
+pub mod test;
+
+pub use cell::*;
+pub use grammer::*;
 
 use super::lexer::*;
 

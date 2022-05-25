@@ -13,6 +13,6 @@ fn main() {
     let _ = itr.next();
     for i in itr {
         let mut tokens = lexer::analyze_tokens_from_file(&i);
-        //parser::parse(&mut tokens);
+        let _ = parser::parse(&mut tokens);
     }
 }
