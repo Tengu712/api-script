@@ -40,13 +40,13 @@ sampleディレクトリの各ファイルを参照。
 以下にBNF記法のような記法によって文法を示す。
 
 ```
-// <Program> ::= indent <Blocks> $
-// <Blocks> ::= <Block> (same_indent <Blocks> | "")
-// <Block> ::= fun <Type> id (deferent_indent logic deferent_indent <Logic> | "")
-// <Logics> ::= <Logic> (same_indent <Logics> | "")
-// <Logic> ::= call <Type> id (deferent_indent <CallArgs> | "")
-// <CallArgs> ::= <CallArg> (same_indent <CallArgs> | "")
-// <CallArg> ::= <Type> <Data>
-// <Type> ::= void | ptr | i32 | u32
-// <Data> ::= nullptr | str | int | float | id
+<Program> ::= indent <Blocks> $
+<Blocks> ::= <Block> (same_indent <Blocks> | "")
+<Block> ::= fun <Type> id (deferent_indent logic deferent_indent <Logic> | "")
+<Logics> ::= <Logic> (same_indent <Logics> | "")
+<Logic> ::= call <Type> id (deferent_indent <CallArgs> | "")
+<CallArgs> ::= <CallArg> (same_indent <CallArgs> | "")
+<CallArg> ::= <Type> <Data>
+<Type> ::= void | ptr | i32 | u32
+<Data> ::= nullptr | str | int | float | id
 ```
