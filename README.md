@@ -17,12 +17,13 @@ The repository manages the cross compiler of the my script that's specialized to
 Grammer written in BNF-like-format is shown below.
 
 ```
-<Program> ::= indent <Block> indent $
-<Block> ::= fun <Function> (indent <Block> | "")
-<Type> ::= ptr | i32 | u32
-<Data> ::= nullptr | str | int | float | id
-<Function> ::= id (deferent_indent logic deferent_indent <Logic> | "")
-<Logic> ::= call <Call> (same_indent <Logic> | "")
-<Call> ::= id (deferent_indent <CallArgs> | "")
-<CallArgs> ::= <Type> <Data> (same_indent <CallArgs> | "")
+// <Program> ::= indent <Blocks> $
+// <Blocks> ::= <Block> (same_indent <Blocks> | "")
+// <Block> ::= fun <Type> id (deferent_indent logic deferent_indent <Logic> | "")
+// <Logics> ::= <Logic> (same_indent <Logics> | "")
+// <Logic> ::= call <Type> id (deferent_indent <CallArgs> | "")
+// <CallArgs> ::= <CallArg> (same_indent <CallArgs> | "")
+// <CallArg> ::= <Type> <Data>
+// <Type> ::= void | ptr | i32 | u32
+// <Data> ::= nullptr | str | int | float | id
 ```

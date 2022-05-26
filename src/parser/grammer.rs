@@ -53,42 +53,44 @@ impl Blocks {
         Blocks { blocks }
     }
 }
-// <Block> ::= fun <Function>
+// <Block> ::= fun <Type> id (deferent_indent logic deferent_indent <Logic> | "")
 #[derive(Debug)]
 pub enum Block {
-    FunBlock(Function),
+    FunBlock {
+        t: Type,
+        id: Token,
+        logics: Option<Logics>,
+    },
 }
 impl Block {
     fn parse(tokens: &mut Tokens, indent: usize) -> Self {
         match tokens.look() {
             Some(Fun) => {
                 let _ = tokens.consume();
-                Block::FunBlock(Function::parse(tokens, indent))
+                Block::parse_function(tokens, indent)
             }
             n => error("Block", "'fun'", n),
         }
     }
-}
-// <Function> ::= id (deferent_indent logic deferent_indent <Logic> | "")
-#[derive(Debug)]
-pub struct Function {
-    id: Token,
-    logics: Option<Logics>,
-}
-impl Function {
-    fn parse(tokens: &mut Tokens, indent: usize) -> Self {
+    fn parse_function(tokens: &mut Tokens, indent: usize) -> Self {
+        let t = Type::parse(tokens);
         let id = tokens.consume_expect(Id(String::new()));
         match tokens.look() {
             Some(Indent(n)) if *n > indent => {
                 let _ = tokens.consume();
                 let _ = tokens.consume_expect(Logic);
                 let i = tokens.consume_indent();
-                Self {
+                Block::FunBlock {
                     id,
+                    t,
                     logics: Some(Logics::parse(tokens, i)),
                 }
             }
-            _ => Self { id, logics: None },
+            _ => Block::FunBlock {
+                id,
+                t,
+                logics: None,
+            },
         }
     }
 }
@@ -112,36 +114,34 @@ impl Logics {
         Logics { logics }
     }
 }
-// <Logic> ::= call <Call>
+// <Logic> ::= call <Type> id (deferent_indent <CallArgs> | "")
 #[derive(Debug)]
 pub enum Logic {
-    CallLogic(Call),
+    CallLogic {
+        t: Type,
+        id: Token,
+        args: Option<CallArgs>,
+    },
 }
 impl Logic {
     fn parse(tokens: &mut Tokens, indent: usize) -> Self {
         match tokens.look() {
             Some(Call) => {
                 let _ = tokens.consume();
-                Logic::CallLogic(Call::parse(tokens, indent))
-            },
+                Logic::parse_call(tokens, indent)
+            }
             n => error("Logic", "'call'", n),
         }
     }
-}
-// <Call> ::= id (deferent_indent <CallArgs> | "")
-#[derive(Debug)]
-pub struct Call {
-    id: Token,
-    args: Option<CallArgs>,
-}
-impl Call {
-    fn parse(tokens: &mut Tokens, indent: usize) -> Self {
+    fn parse_call(tokens: &mut Tokens, indent: usize) -> Self {
+        let t = Type::parse(tokens);
         let id = tokens.consume_expect(Id(String::new()));
         let new_indent = match tokens.look() {
             Some(Indent(n)) if *n > indent => tokens.consume_indent(),
-            _ => return Self { id, args: None },
+            _ => return Logic::CallLogic { t, id, args: None },
         };
-        Self {
+        Logic::CallLogic {
+            t,
             id,
             args: Some(CallArgs::parse(tokens, new_indent)),
         }
@@ -167,6 +167,7 @@ impl CallArgs {
         CallArgs { args }
     }
 }
+// <CallArg> ::= <Type> <Data>
 #[derive(Debug)]
 pub struct CallArg {
     t: Type,
@@ -179,7 +180,7 @@ impl CallArg {
         Self { t, d }
     }
 }
-// <Type> ::= ptr | i32 | u32
+// <Type> ::= void | ptr | i32 | u32
 #[derive(Debug)]
 pub struct Type {
     value: Token,
@@ -187,7 +188,7 @@ pub struct Type {
 impl Type {
     fn parse(tokens: &mut Tokens) -> Self {
         let value = match tokens.look() {
-            Some(Ptr) | Some(I32) | Some(U32) => tokens.consume(),
+            Some(Void) | Some(Ptr) | Some(I32) | Some(U32) => tokens.consume(),
             n => error("Type", "type token", n),
         };
         Self { value }

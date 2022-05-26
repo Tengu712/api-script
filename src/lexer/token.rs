@@ -9,6 +9,7 @@ pub enum Token {
     Logic,
     Call,
     // Type
+    Void,
     Ptr,
     I32,
     U32,
@@ -27,13 +28,13 @@ impl Token {
             "args" => Args,
             "logic" => Logic,
             "call" => Call,
+            "void" => Void,
             "ptr" => Ptr,
             "nullptr" => Nullptr,
             "i32" => I32,
             "u32" => U32,
             _ => {
-                let mut chars = w.chars();
-                if chars.nth(0).unwrap() == '\"' && chars.nth_back(0).unwrap() == '\"' {
+                if w.starts_with('\"') && w.ends_with('\"') {
                     Str(String::from(w))
                 } else if is_integer_literal(w) {
                     Int(String::from(w))

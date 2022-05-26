@@ -3,8 +3,6 @@ use super::*;
 impl Program {
     pub fn format(&self) -> String {
         let f = format!("{:?}\n", self);
-        let f = f.replace("FunBlock(", "");
-        let f = f.replace("CallLogic(", "");
         let f = f.replace("Some(", "");
         let f = f.replace("[", "[ ");
         let f = f.replace("]", "] ");
