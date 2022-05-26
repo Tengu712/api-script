@@ -1,4 +1,9 @@
 use super::*;
+use std::{
+    fs::File,
+    io::{BufRead, BufReader},
+    path::Path,
+};
 
 /// A function to split line considering string literal
 /// and get number of spaces that's at the top of the line.
@@ -56,11 +61,7 @@ pub fn analyze_tokens(lines: Vec<String>) -> Tokens {
     Tokens::from(v)
 }
 pub fn analyze_tokens_from_file(path: &String) -> Tokens {
-    use std::{
-        fs::File,
-        io::{BufRead, BufReader},
-    };
-    let reader = BufReader::new(File::open(path).unwrap());
+    let reader = BufReader::new(File::open(Path::new(path)).unwrap());
     let lines = reader.lines().map(|n| n.unwrap()).collect();
     analyze_tokens(lines)
 }
