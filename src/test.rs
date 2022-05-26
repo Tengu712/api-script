@@ -30,32 +30,26 @@ fn parser_test1() {
     let mut tokens = lexer::analyze_tokens(CODE1.split('\n').map(|n| String::from(n)).collect());
     let ast = parser::parse(&mut tokens);
     let expect = "
-Program {
-  Blocks {
+Program
+  Blocks
     [
-      FunBlock {
+      FunBlock
         Type { Void }
         Id(\"hello_world\")
-        Logics {
+        Logics
           [
-            CallLogic {
+            CallLogic
               Type { I32 }
               Id(\"user32.MessageBoxA\")
-              CallArgs {
+              CallArgs
                 [
                   CallArg { Type { Ptr } , Data { Nullptr } }
                   CallArg { Type { Ptr } , Data { Str(\"\\\"Hello World!\\\"\") } }
                   CallArg { Type { Ptr } , Data { Str(\"\\\"title\\\"\") } }
                   CallArg { Type { I32 } , Data { Int(\"0\") } }
                 ]
-              }
-            }
           ]
-        }
-      }
     ]
-  }
-}
 ";
     assert_eq!(ast.format(), expect);
 }

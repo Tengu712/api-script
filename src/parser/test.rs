@@ -21,17 +21,25 @@ impl Program {
                     res.push('\n');
                     res.push_str(&format_indent(indent));
                 }
-                "{" | "[" if no_indent == 0 => {
+                "[" if no_indent == 0 => {
                     indent += 1;
                     res.push_str(i);
                     res.push('\n');
                     res.push_str(&format_indent(indent));
                 }
-                "}" | "]" if no_indent == 0 => {
+                "{" if no_indent == 0 => {
+                    indent += 1;
+                    res.push('\n');
+                    res.push_str(&format_indent(indent));
+                }
+                "]" if no_indent == 0 => {
                     indent -= 1;
                     res.push('\n');
                     res.push_str(&format_indent(indent));
                     res.push_str(i);
+                }
+                "}" if no_indent == 0 => {
+                    indent -= 1;
                 }
                 "CallArg" | "Type" | "Data" => {
                     no_indent += 1;
