@@ -52,7 +52,6 @@ pub fn analyze_tokens(lines: Vec<String>) -> Tokens {
             v.push(Token::from(&w));
         }
     }
-    v.push(Token::Indent(0));
     v.push(Token::Eof);
     Tokens::from(v)
 }

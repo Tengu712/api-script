@@ -1,27 +1,59 @@
 use super::*;
 
-impl Cell {
-    fn format_(&self, res: &mut String, indent: usize, is_car: bool) {
-        match self {
-            Cell::Nil => (),
-            Cell::Atom(n) => {
-                res.push_str(&format!("{:?} ", n));
-            }
-            Cell::Pair(car, cdr) => {
-                if is_car {
+impl Program {
+    pub fn format(&self) -> String {
+        let f = format!("{:?}\n", self);
+        let f = f.replace("FunBlock(", "");
+        let f = f.replace("CallLogic(", "");
+        let f = f.replace("Some(", "");
+        let f = f.replace("[", "[ ");
+        let f = f.replace("]", "] ");
+        let f = f.replace(",", " ,");
+        let f = f.replace("})", "}");
+        let f = f.replace("}]", "} ]");
+        let f = f.replace(")]", ") ]");
+        let f = f.replace("}\n", "}");
+        let words = f.split(' ').collect::<Vec<&str>>();
+        let mut res = String::from("\n");
+        let mut indent = 0;
+        let mut no_indent = 0;
+        for i in words {
+            match i {
+                "," if no_indent == 0 => {
                     res.push('\n');
                     res.push_str(&format_indent(indent));
                 }
-                car.format_(res, indent + 1, true);
-                cdr.format_(res, indent, false);
+                "{" | "[" if no_indent == 0 => {
+                    indent += 1;
+                    res.push_str(i);
+                    res.push('\n');
+                    res.push_str(&format_indent(indent));
+                }
+                "}" | "]" if no_indent == 0 => {
+                    indent -= 1;
+                    res.push('\n');
+                    res.push_str(&format_indent(indent));
+                    res.push_str(i);
+                }
+                "CallArg" | "Type" | "Data" => {
+                    no_indent += 1;
+                    res.push_str(i);
+                    res.push(' ');
+                }
+                "}" => {
+                    no_indent -= 1;
+                    res.push_str(i);
+                    res.push(' ');
+                }
+                _ if i.ends_with(":") => (),
+                _ => {
+                    res.push_str(i);
+                    res.push(' ');
+                }
             }
         }
-    }
-    pub fn format(&self) -> String {
-        let mut res = String::new();
-        self.format_(&mut res, 0, true);
-        res.push('\n');
-        res
+        res += "\n";
+        res.replace(" \n", "\n")
     }
 }
 fn format_indent(indent: usize) -> String {
