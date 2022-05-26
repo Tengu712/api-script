@@ -20,13 +20,17 @@ fn error(place: &str, expect: &str, found: Option<&Token>) -> ! {
     }
 }
 
+pub fn parse(tokens: &mut Tokens) -> Program {
+    Program::parse(tokens)
+}
+
 // <Program> ::= indent <Blocks> $
 #[derive(Debug)]
 pub struct Program {
-    blocks: Blocks,
+    pub blocks: Blocks,
 }
 impl Program {
-    pub fn parse(tokens: &mut Tokens) -> Self {
+    fn parse(tokens: &mut Tokens) -> Self {
         let indent = tokens.consume_indent();
         let blocks = Blocks::parse(tokens, indent);
         let _ = tokens.consume_expect(Eof);
@@ -36,7 +40,7 @@ impl Program {
 // <Blocks> ::= <Block> (same_indent <Blocks> | "")
 #[derive(Debug)]
 pub struct Blocks {
-    blocks: Vec<Block>,
+    pub blocks: Vec<Block>,
 }
 impl Blocks {
     fn parse(tokens: &mut Tokens, indent: usize) -> Self {
@@ -97,7 +101,7 @@ impl Block {
 // <Logics> ::= <Logic> (same_indent <Logics> | "")
 #[derive(Debug)]
 pub struct Logics {
-    logics: Vec<Logic>,
+    pub logics: Vec<Logic>,
 }
 impl Logics {
     fn parse(tokens: &mut Tokens, indent: usize) -> Self {
@@ -150,7 +154,7 @@ impl Logic {
 // <CallArgs> ::= <CallArg> (same_indent <CallArgs> | "")
 #[derive(Debug)]
 pub struct CallArgs {
-    args: Vec<CallArg>,
+    pub args: Vec<CallArg>,
 }
 impl CallArgs {
     fn parse(tokens: &mut Tokens, indent: usize) -> Self {
@@ -170,8 +174,8 @@ impl CallArgs {
 // <CallArg> ::= <Type> <Data>
 #[derive(Debug)]
 pub struct CallArg {
-    t: Type,
-    d: Data,
+    pub t: Type,
+    pub d: Data,
 }
 impl CallArg {
     fn parse(tokens: &mut Tokens) -> Self {
@@ -183,7 +187,7 @@ impl CallArg {
 // <Type> ::= void | ptr | i32 | u32
 #[derive(Debug)]
 pub struct Type {
-    value: Token,
+    pub value: Token,
 }
 impl Type {
     fn parse(tokens: &mut Tokens) -> Self {
@@ -197,7 +201,7 @@ impl Type {
 // <Data> ::= nullptr | str | int | float | id
 #[derive(Debug)]
 pub struct Data {
-    value: Token,
+    pub value: Token,
 }
 impl Data {
     fn parse(tokens: &mut Tokens) -> Self {

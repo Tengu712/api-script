@@ -53,3 +53,14 @@ Program
 ";
     assert_eq!(ast.format(), expect);
 }
+#[test]
+fn format_test1() {
+    let mut tokens = lexer::analyze_tokens(CODE1.split('\n').map(|n| String::from(n)).collect());
+    let ast = parser::parse(&mut tokens);
+    let expect = "\
+fn hello_world() -> () {
+    user32.MessageBoxA(0, \"Hello World!\", \"title\", 0);
+}
+";
+    assert_eq!(ast.format_for_rust(), expect);
+}

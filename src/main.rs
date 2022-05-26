@@ -1,3 +1,4 @@
+mod formatter;
 mod lexer;
 mod parser;
 #[cfg(test)]
@@ -13,6 +14,7 @@ fn main() {
     let _ = itr.next();
     for i in itr {
         let mut tokens = lexer::analyze_tokens_from_file(&i);
-        let _ = parser::parse(&mut tokens);
+        let ast = parser::parse(&mut tokens);
+        let _ = ast.format_for_rust();
     }
 }
