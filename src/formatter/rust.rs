@@ -2,61 +2,97 @@ use super::*;
 
 impl Program {
     pub fn format_for_rust(&self) -> String {
-        let mut res = String::new();
-        self.blocks.format(&mut res);
-        res
+        let mut body = String::new();
+        let mut link = String::new();
+        self.blocks.format(&mut body, &mut link);
+        link + &body
     }
 }
 impl Blocks {
-    fn format(&self, res: &mut String) {
+    fn format(&self, body: &mut String, link: &mut String) {
         for i in &self.blocks {
-            i.format(res);
+            i.format(body, link);
         }
     }
 }
 impl Block {
-    fn format(&self, res: &mut String) {
+    fn format(&self, body: &mut String, link: &mut String) {
         match self {
             Block::FunBlock { t, id, logics } => {
                 let id_str = match id {
                     Token::Id(n) => n,
                     n => panic!("[Formatter error] {:?} is not id.", n),
                 };
-                res.push_str(&format!("fn {}() -> {} {{\n", id_str, t.get_format()));
+                body.push_str(&format!("fn {}() -> {} {{\n", id_str, t.get_format()));
                 if let Some(n) = logics {
-                    n.format(res);
+                    n.format(body, link);
                 }
-                res.push_str("}\n");
+                body.push_str("}\n");
             }
         }
     }
 }
 impl Logics {
-    fn format(&self, res: &mut String) {
+    fn format(&self, body: &mut String, link: &mut String) {
         for i in &self.logics {
-            i.format(res);
+            i.format(body, link);
         }
     }
 }
 impl Logic {
-    fn format(&self, res: &mut String) {
+    fn format(&self, body: &mut String, link: &mut String) {
         match self {
-            Logic::CallLogic { t: _, id, args } => {
-                let id_str = match id {
-                    Token::Id(n) => n,
-                    n => panic!("[Formatter error] {:?} is not id.", n),
-                };
-                res.push_str(&format!("    {}(", id_str));
-                if let Some(n) = args {
-                    n.format(res);
-                }
-                res.push_str(");\n");
-            }
+            Logic::CallLogic { t, id, args } => self.format_calllogic(body, link, t, id, args),
+        }
+    }
+    fn format_calllogic(
+        &self,
+        body: &mut String,
+        link: &mut String,
+        t: &Type,
+        id: &Token,
+        args: &Option<CallArgs>,
+    ) {
+        let callargs_str = if let Some(n) = args {
+            n.get_format(CallArgFormat::CallArg)
+        } else {
+            String::from("")
+        };
+        let id_str = match id {
+            Token::Id(n) => n,
+            n => panic!("[Formatter error] {:?} is not id.", n),
+        };
+        let splited = id_str.split('.').collect::<Vec<&str>>();
+        if splited.len() == 2 {
+            let linkargs_str = if let Some(n) = args {
+                n.get_format(CallArgFormat::LinkArg)
+            } else {
+                String::from("")
+            };
+            link.push_str(&format!(
+                "\
+#[link(name=\"{}\")]
+extern \"stdcall\" {{
+    fn {}({}) -> {};
+}}
+",
+                splited[0],
+                splited[1],
+                linkargs_str,
+                t.get_format()
+            ));
+            body.push_str(&format!(
+                "    unsafe {{ {}({}) }};\n",
+                splited[1], callargs_str
+            ))
+        } else {
+            body.push_str(&format!("    {}({});\n", id_str, callargs_str));
         }
     }
 }
 impl CallArgs {
-    fn format(&self, res: &mut String) {
+    fn get_format(&self, kind: CallArgFormat) -> String {
+        let mut res = String::new();
         let mut is_needed_comma = false;
         for i in &self.args {
             if is_needed_comma {
@@ -64,13 +100,22 @@ impl CallArgs {
             } else {
                 is_needed_comma = true;
             }
-            i.format(res);
+            res.push_str(&format!("{}", i.get_format(kind.clone())));
         }
+        res
     }
 }
+#[derive(Clone)]
+enum CallArgFormat {
+    LinkArg,
+    CallArg,
+}
 impl CallArg {
-    fn format(&self, res: &mut String) {
-        res.push_str(&self.d.get_format());
+    fn get_format(&self, kind: CallArgFormat) -> String {
+        match kind {
+            CallArgFormat::LinkArg => String::from("_: ") + &self.t.get_format(),
+            CallArgFormat::CallArg => self.d.get_format(),
+        }
     }
 }
 impl Type {
@@ -78,7 +123,7 @@ impl Type {
         use Token::*;
         String::from(match &self.value {
             Void => "()",
-            Ptr => "usize",
+            Ptr => "i32",
             I32 => "i32",
             U32 => "u32",
             n => panic!("[Formatter error] {:?} is not type.", n),
@@ -90,7 +135,8 @@ impl Data {
         use Token::*;
         match &self.value {
             Nullptr => String::from("0"),
-            Str(n) | Int(n) | Float(n) | Id(n) => n.clone(),
+            Str(n) => n.clone() + ".as_ptr() as i32",
+            Int(n) | Float(n) | Id(n) => n.clone(),
             n => panic!("[Formatter error] {:?} is not data.", n),
         }
     }

@@ -9,7 +9,7 @@ fun void hello_world
       ptr nullptr
       ptr \"Hello World!\"
       ptr \"title\"
-      i32 0
+      u32 0
 ";
 #[test]
 fn lexer_test1() {
@@ -21,7 +21,7 @@ Indent(4) Call I32 Id(\"user32.MessageBoxA\")
 Indent(6) Ptr Nullptr
 Indent(6) Ptr Str(\"\\\"Hello World!\\\"\")
 Indent(6) Ptr Str(\"\\\"title\\\"\")
-Indent(6) I32 Int(\"0\") Eof
+Indent(6) U32 Int(\"0\") Eof
 ";
     assert_eq!(tokens.format(), expect);
 }
@@ -46,7 +46,7 @@ Program
                   CallArg { Type { Ptr } , Data { Nullptr } }
                   CallArg { Type { Ptr } , Data { Str(\"\\\"Hello World!\\\"\") } }
                   CallArg { Type { Ptr } , Data { Str(\"\\\"title\\\"\") } }
-                  CallArg { Type { I32 } , Data { Int(\"0\") } }
+                  CallArg { Type { U32 } , Data { Int(\"0\") } }
                 ]
           ]
     ]
@@ -58,8 +58,12 @@ fn format_test1() {
     let mut tokens = lexer::analyze_tokens(CODE1.split('\n').map(|n| String::from(n)).collect());
     let ast = parser::parse(&mut tokens);
     let expect = "\
+#[link(name=\"user32\")]
+extern \"stdcall\" {
+    fn MessageBoxA(_: i32, _: i32, _: i32, _: u32) -> i32;
+}
 fn hello_world() -> () {
-    user32.MessageBoxA(0, \"Hello World!\", \"title\", 0);
+    unsafe { MessageBoxA(0, \"Hello World!\".as_ptr() as i32, \"title\".as_ptr() as i32, 0) };
 }
 ";
     assert_eq!(ast.format_for_rust(), expect);
