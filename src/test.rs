@@ -73,15 +73,15 @@ fn hello_world() -> () {
 #[cfg(test)]
 const CODE2: &'static str = "
 # Hello World with MessageBoxA with args
-fun void hello_world
+fun void message_box
   args
     ptr msg
     ptr ttl
   logic
     call i32 user32.MessageBoxA
       ptr nullptr
-      ptr \"Hello World!\"
-      ptr \"title\"
+      ptr msg
+      ptr ttl
       u32 0
 ";
 #[test]
@@ -93,8 +93,8 @@ fn format_test2() {
 extern \"stdcall\" {
     fn MessageBoxA(_: i32, _: i32, _: i32, _: u32) -> i32;
 }
-fn hello_world(msg: i32, ttl: i32) -> () {
-    unsafe { MessageBoxA(0, \"Hello World!\".as_ptr() as i32, \"title\".as_ptr() as i32, 0) };
+fn message_box(msg: i32, ttl: i32) -> () {
+    unsafe { MessageBoxA(0, msg, ttl, 0) };
 }
 ";
     assert_eq!(ast.format_for_rust(), expect);
