@@ -57,12 +57,16 @@ impl Blocks {
         Blocks { blocks }
     }
 }
-// <Block> ::= fun <Type> id (deferent_indent logic deferent_indent <Logic> | "")
+// <Block> ::=
+//   fun <Type> id
+//     (deferent_indent args deferent_indent <Args> | "")
+//     (deferent_indent logic deferent_indent <Logic> | "")
 #[derive(Debug)]
 pub enum Block {
     FunBlock {
         t: Type,
         id: Token,
+        args: Option<Args>,
         logics: Option<Logics>,
     },
 }
@@ -82,17 +86,48 @@ impl Block {
         match tokens.look() {
             Some(Indent(n)) if *n > indent => {
                 let _ = tokens.consume();
-                let _ = tokens.consume_expect(Logic);
-                let i = tokens.consume_indent();
-                Block::FunBlock {
-                    id,
-                    t,
-                    logics: Some(Logics::parse(tokens, i)),
+                match tokens.look() {
+                    Some(Args) => {
+                        let _ = tokens.consume();
+                        let i = tokens.consume_indent();
+                        let args = Some(Args::parse(tokens, i));
+                        match tokens.look() {
+                            Some(Indent(l)) if *l > indent => {
+                                let _ = tokens.consume();
+                                let _ = tokens.consume_expect(Logic);
+                                let i = tokens.consume_indent();
+                                Block::FunBlock {
+                                    id,
+                                    t,
+                                    args,
+                                    logics: Some(Logics::parse(tokens, i)),
+                                }
+                            }
+                            _ => Block::FunBlock {
+                                id,
+                                t,
+                                args,
+                                logics: None,
+                            },
+                        }
+                    }
+                    Some(Logic) => {
+                        let _ = tokens.consume();
+                        let i = tokens.consume_indent();
+                        Block::FunBlock {
+                            id,
+                            t,
+                            args: None,
+                            logics: Some(Logics::parse(tokens, i)),
+                        }
+                    }
+                    n => error("Block", "'args' or 'logic'", n),
                 }
             }
             _ => Block::FunBlock {
                 id,
                 t,
+                args: None,
                 logics: None,
             },
         }
@@ -115,16 +150,16 @@ impl Logics {
                 break;
             }
         }
-        Logics { logics }
+        Self { logics }
     }
 }
-// <Logic> ::= call <Type> id (deferent_indent <CallArgs> | "")
+// <Logic> ::= call <Type> id (deferent_indent <Args> | "")
 #[derive(Debug)]
 pub enum Logic {
     CallLogic {
         t: Type,
         id: Token,
-        args: Option<CallArgs>,
+        args: Option<Args>,
     },
 }
 impl Logic {
@@ -147,40 +182,41 @@ impl Logic {
         Logic::CallLogic {
             t,
             id,
-            args: Some(CallArgs::parse(tokens, new_indent)),
+            args: Some(Args::parse(tokens, new_indent)),
         }
     }
 }
-// <CallArgs> ::= <CallArg> (same_indent <CallArgs> | "")
+// <Args> ::= <Arg> (same_indent <Args> | "")
 #[derive(Debug)]
-pub struct CallArgs {
-    pub args: Vec<CallArg>,
+pub struct Args {
+    pub args: Vec<Arg>,
 }
-impl CallArgs {
+impl Args {
     fn parse(tokens: &mut Tokens, indent: usize) -> Self {
         let mut args = Vec::new();
-        args.push(CallArg::parse(tokens));
+        args.push(Arg::parse(tokens));
         while let Some(Indent(n)) = tokens.look() {
             if *n == indent {
                 let _ = tokens.consume();
-                args.push(CallArg::parse(tokens));
+                args.push(Arg::parse(tokens));
             } else {
                 break;
             }
         }
-        CallArgs { args }
+        Self { args }
     }
 }
-// <CallArg> ::= <Type> <Data>
+// <Arg> ::= <Type> <Data>
 #[derive(Debug)]
-pub struct CallArg {
+pub struct Arg {
     pub t: Type,
     pub d: Data,
 }
-impl CallArg {
+impl Arg {
     fn parse(tokens: &mut Tokens) -> Self {
         let t = Type::parse(tokens);
         let d = Data::parse(tokens);
+        println!("{:?}", d);
         Self { t, d }
     }
 }

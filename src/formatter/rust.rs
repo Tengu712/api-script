@@ -18,12 +18,26 @@ impl Blocks {
 impl Block {
     fn format(&self, body: &mut String, link: &mut String) {
         match self {
-            Block::FunBlock { t, id, logics } => {
+            Block::FunBlock {
+                t,
+                id,
+                args,
+                logics,
+            } => {
                 let id_str = match id {
                     Token::Id(n) => n,
                     n => panic!("[Formatter error] {:?} is not id.", n),
                 };
-                body.push_str(&format!("fn {}() -> {} {{\n", id_str, t.get_format()));
+                let args_str = match args {
+                    Some(n) => n.get_format(ArgFormat::DefArg),
+                    None => String::new(),
+                };
+                body.push_str(&format!(
+                    "fn {}({}) -> {} {{\n",
+                    id_str,
+                    args_str,
+                    t.get_format()
+                ));
                 if let Some(n) = logics {
                     n.format(body, link);
                 }
@@ -51,10 +65,10 @@ impl Logic {
         link: &mut String,
         t: &Type,
         id: &Token,
-        args: &Option<CallArgs>,
+        args: &Option<Args>,
     ) {
         let callargs_str = if let Some(n) = args {
-            n.get_format(CallArgFormat::CallArg)
+            n.get_format(ArgFormat::CallArg)
         } else {
             String::from("")
         };
@@ -65,7 +79,7 @@ impl Logic {
         let splited = id_str.split('.').collect::<Vec<&str>>();
         if splited.len() == 2 {
             let linkargs_str = if let Some(n) = args {
-                n.get_format(CallArgFormat::LinkArg)
+                n.get_format(ArgFormat::LinkArg)
             } else {
                 String::from("")
             };
@@ -90,8 +104,8 @@ extern \"stdcall\" {{
         }
     }
 }
-impl CallArgs {
-    fn get_format(&self, kind: CallArgFormat) -> String {
+impl Args {
+    fn get_format(&self, kind: ArgFormat) -> String {
         let mut res = String::new();
         let mut is_needed_comma = false;
         for i in &self.args {
@@ -106,15 +120,17 @@ impl CallArgs {
     }
 }
 #[derive(Clone)]
-enum CallArgFormat {
+enum ArgFormat {
+    DefArg,
     LinkArg,
     CallArg,
 }
-impl CallArg {
-    fn get_format(&self, kind: CallArgFormat) -> String {
+impl Arg {
+    fn get_format(&self, kind: ArgFormat) -> String {
         match kind {
-            CallArgFormat::LinkArg => String::from("_: ") + &self.t.get_format(),
-            CallArgFormat::CallArg => self.d.get_format(),
+            ArgFormat::DefArg => self.d.get_format() + ": " + &self.t.get_format(),
+            ArgFormat::LinkArg => String::from("_: ") + &self.t.get_format(),
+            ArgFormat::CallArg => self.d.get_format(),
         }
     }
 }

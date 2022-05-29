@@ -41,7 +41,7 @@ impl Program {
                 "}" if no_indent == 0 => {
                     indent -= 1;
                 }
-                "CallArg" | "Type" | "Data" => {
+                "Arg" | "Type" | "Data" => {
                     no_indent += 1;
                     res.push_str(i);
                     res.push(' ');

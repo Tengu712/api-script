@@ -42,11 +42,14 @@ sampleディレクトリの各ファイルを参照。
 ```
 <Program> ::= indent <Blocks> $
 <Blocks> ::= <Block> (same_indent <Blocks> | "")
-<Block> ::= fun <Type> id (deferent_indent logic deferent_indent <Logic> | "")
+<Block> ::= 
+  fun <Type> id
+    (deferent_indent args deferent_indent <Args> | "")
+    (deferent_indent logic deferent_indent <Logic> | "")
 <Logics> ::= <Logic> (same_indent <Logics> | "")
-<Logic> ::= call <Type> id (deferent_indent <CallArgs> | "")
-<CallArgs> ::= <CallArg> (same_indent <CallArgs> | "")
-<CallArg> ::= <Type> <Data>
+<Logic> ::= call <Type> id (deferent_indent <Args> | "")
+<Args> ::= <Arg> (same_indent <Args> | "")
+<Arg> ::= <Type> <Data>
 <Type> ::= void | ptr | i32 | u32
 <Data> ::= nullptr | str | int | float | id
 ```

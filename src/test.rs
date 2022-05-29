@@ -36,17 +36,18 @@ Program
       FunBlock
         Type { Void }
         Id(\"hello_world\")
+        None
         Logics
           [
             CallLogic
               Type { I32 }
               Id(\"user32.MessageBoxA\")
-              CallArgs
+              Args
                 [
-                  CallArg { Type { Ptr } , Data { Nullptr } }
-                  CallArg { Type { Ptr } , Data { Str(\"\\\"Hello World!\\\"\") } }
-                  CallArg { Type { Ptr } , Data { Str(\"\\\"title\\\"\") } }
-                  CallArg { Type { U32 } , Data { Int(\"0\") } }
+                  Arg { Type { Ptr } , Data { Nullptr } }
+                  Arg { Type { Ptr } , Data { Str(\"\\\"Hello World!\\\"\") } }
+                  Arg { Type { Ptr } , Data { Str(\"\\\"title\\\"\") } }
+                  Arg { Type { U32 } , Data { Int(\"0\") } }
                 ]
           ]
     ]
@@ -63,6 +64,36 @@ extern \"stdcall\" {
     fn MessageBoxA(_: i32, _: i32, _: i32, _: u32) -> i32;
 }
 fn hello_world() -> () {
+    unsafe { MessageBoxA(0, \"Hello World!\".as_ptr() as i32, \"title\".as_ptr() as i32, 0) };
+}
+";
+    assert_eq!(ast.format_for_rust(), expect);
+}
+
+#[cfg(test)]
+const CODE2: &'static str = "
+# Hello World with MessageBoxA with args
+fun void hello_world
+  args
+    ptr msg
+    ptr ttl
+  logic
+    call i32 user32.MessageBoxA
+      ptr nullptr
+      ptr \"Hello World!\"
+      ptr \"title\"
+      u32 0
+";
+#[test]
+fn format_test2() {
+    let mut tokens = lexer::analyze_tokens(CODE2.split('\n').map(|n| String::from(n)).collect());
+    let ast = parser::parse(&mut tokens);
+    let expect = "\
+#[link(name=\"user32\")]
+extern \"stdcall\" {
+    fn MessageBoxA(_: i32, _: i32, _: i32, _: u32) -> i32;
+}
+fn hello_world(msg: i32, ttl: i32) -> () {
     unsafe { MessageBoxA(0, \"Hello World!\".as_ptr() as i32, \"title\".as_ptr() as i32, 0) };
 }
 ";
