@@ -1,18 +1,18 @@
-pub mod alter;
-pub mod concat;
-pub mod lchar;
-pub mod star;
+mod alter;
+mod concat;
+mod lchar;
+mod parser;
+mod star;
+#[cfg(test)]
+mod test;
 
-pub use alter::*;
-pub use concat::*;
-pub use lchar::*;
-pub use star::*;
+use alter::*;
+use concat::*;
+use lchar::*;
+use star::*;
 
 use super::nfafragment::*;
-
-pub trait Regex {
-    fn assemble(&self, context: Context) -> (Context, NFAFrag);
-}
+use std::collections::VecDeque;
 
 /// A struct to generate a unique state id.
 pub struct Context(usize);
@@ -26,7 +26,17 @@ impl Context {
     }
 }
 
-pub fn regex_to_nfa(regex: Box<dyn Regex>) -> super::nfa::NFAutomata {
+pub trait RegexImpl: std::fmt::Debug {
+    fn assemble(&self, context: Context) -> (Context, NFAFrag);
+}
+pub type Regex = Box<dyn RegexImpl>;
+
+/// A function to parse regex string to regex btree.
+pub fn parse_regex(restr: String) -> Regex {
+    parser::expr(&mut parser::Token::from_restr(restr))
+}
+/// A function to parse regex btree to NFA.
+pub fn parse_nfa(regex: Regex) -> super::nfa::NFAutomata {
     let (_, frag) = regex.assemble(Context::new());
     frag.build()
 }

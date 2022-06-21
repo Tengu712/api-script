@@ -1,12 +1,12 @@
 use super::*;
 
-pub struct Alter(pub Box<dyn Regex>, pub Box<dyn Regex>);
+pub struct Alter(Regex, Regex);
 impl Alter {
-    pub fn new_box(op1: Box<dyn Regex>, op2: Box<dyn Regex>) -> Box<Self> {
+    pub fn new_box(op1: Regex, op2: Regex) -> Box<Self> {
         Box::new(Self(op1, op2))
     }
 }
-impl Regex for Alter {
+impl RegexImpl for Alter {
     fn assemble(&self, context: Context) -> (Context, NFAFrag) {
         let (context, frag1) = self.0.assemble(context);
         let (context, frag2) = self.1.assemble(context);
@@ -16,5 +16,10 @@ impl Regex for Alter {
         frag.connect(start, '\0', frag1.start);
         frag.connect(start, '\0', frag2.start);
         (context, frag)
+    }
+}
+impl core::fmt::Debug for Alter {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "Alter({:?}, {:?})", self.0, self.1)
     }
 }

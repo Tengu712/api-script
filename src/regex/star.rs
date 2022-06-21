@@ -1,12 +1,12 @@
 use super::*;
 
-pub struct Star(pub Box<dyn Regex>);
+pub struct Star(Regex);
 impl Star {
-    pub fn new_box(op: Box<dyn Regex>) -> Box<Self> {
+    pub fn new_box(op: Regex) -> Box<Self> {
         Box::new(Self(op))
     }
 }
-impl Regex for Star {
+impl RegexImpl for Star {
     fn assemble(&self, context: Context) -> (Context, NFAFrag) {
         let (context, frag_trg) = self.0.assemble(context);
         let (context, start) = context.next();
@@ -19,5 +19,10 @@ impl Regex for Star {
             frag.connect(*state, '\0', frag_trg.start);
         }
         (context, frag)
+    }
+}
+impl core::fmt::Debug for Star {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "Star({:?})", self.0)
     }
 }
