@@ -3,5 +3,5 @@
 version = 3
 
 [[package]]
-name = "win32api-script"
+name = "script"
 version = "0.1.0"
