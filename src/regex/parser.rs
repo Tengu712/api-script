@@ -2,7 +2,7 @@ use super::*;
 
 #[derive(Debug, PartialEq)]
 pub enum Token {
-    Character(char),
+    Character(u8),
     OpAlter,
     OpStar,
     LParen,
@@ -14,8 +14,8 @@ impl Token {
     pub fn from_restr(restr: String) -> VecDeque<Token> {
         let mut tokens = VecDeque::new();
         let mut flag = false;
-        for c in restr.chars() {
-            match c {
+        for c in restr.into_bytes() {
+            match c as char {
                 _ if flag => {
                     flag = false;
                     tokens.push_back(Token::Character(c));
@@ -64,7 +64,7 @@ fn seq(tokens: &mut VecDeque<Token>) -> Regex {
     match tokens.front() {
         Some(Token::Eps) => {
             consume_expect(tokens, Token::Eps);
-            LChar::new_box('\0')
+            LChar::new_box(0)
         }
         _ => subseq(tokens),
     }

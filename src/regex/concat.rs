@@ -13,7 +13,7 @@ impl RegexImpl for Concat {
         let mut frag = NFAFrag::compose(&frag1, &frag2, frag1.start);
         frag.accepts = frag2.accepts;
         for state in frag1.accepts.iter() {
-            frag.connect(*state, '\0', frag2.start);
+            frag.connect(*state, 0, frag2.start);
         }
         (context, frag)
     }

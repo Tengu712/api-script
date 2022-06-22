@@ -14,9 +14,9 @@ impl RegexImpl for Star {
         frag.accepts = frag_trg.accepts.clone();
         frag.accepts.insert(start);
         frag.map = frag_trg.map.clone();
-        frag.connect(start, '\0', frag_trg.start);
+        frag.connect(start, 0, frag_trg.start);
         for state in frag_trg.accepts.iter() {
-            frag.connect(*state, '\0', frag_trg.start);
+            frag.connect(*state, 0, frag_trg.start);
         }
         (context, frag)
     }

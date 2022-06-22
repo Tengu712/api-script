@@ -1,5 +1,4 @@
-mod nfa;
-mod nfafragment;
+mod automata;
 mod regex;
 
 fn main() {}

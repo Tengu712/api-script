@@ -11,11 +11,11 @@ use concat::*;
 use lchar::*;
 use star::*;
 
-use super::nfafragment::*;
+use super::automata::{nfa::NFAutomata, nfafrag::NFAFrag};
 use std::collections::VecDeque;
 
 /// A struct to generate a unique state id.
-pub struct Context(usize);
+struct Context(usize);
 impl Context {
     fn new() -> Self {
         Self(0)
@@ -26,7 +26,7 @@ impl Context {
     }
 }
 
-pub trait RegexImpl: std::fmt::Debug {
+trait RegexImpl: std::fmt::Debug {
     fn assemble(&self, context: Context) -> (Context, NFAFrag);
 }
 pub type Regex = Box<dyn RegexImpl>;
@@ -36,7 +36,7 @@ pub fn parse_regex(restr: String) -> Regex {
     parser::expr(&mut parser::Token::from_restr(restr))
 }
 /// A function to parse regex btree to NFA.
-pub fn parse_nfa(regex: Regex) -> super::nfa::NFAutomata {
+pub fn parse_nfa(regex: Regex) -> NFAutomata {
     let (_, frag) = regex.assemble(Context::new());
     frag.build()
 }

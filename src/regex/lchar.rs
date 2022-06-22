@@ -1,8 +1,8 @@
 use super::*;
 
-pub struct LChar(char);
+pub struct LChar(u8);
 impl LChar {
-    pub fn new_box(chr: char) -> Box<Self> {
+    pub fn new_box(chr: u8) -> Box<Self> {
         Box::new(Self(chr))
     }
 }
@@ -18,6 +18,6 @@ impl RegexImpl for LChar {
 }
 impl core::fmt::Debug for LChar {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        write!(f, "LChar({})", self.0)
+        write!(f, "LChar({})", self.0 as char)
     }
 }

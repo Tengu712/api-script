@@ -1,6 +1,5 @@
 use std::collections::{HashMap, HashSet};
 
-#[derive(Debug)]
 pub struct NFAutomata {
     pub start: usize,
     pub accepts: HashSet<usize>,
@@ -8,10 +7,9 @@ pub struct NFAutomata {
 }
 
 /// A struct to make NFA have transition function.
-#[derive(Debug)]
-pub struct Transition(pub HashMap<(usize, char), HashSet<usize>>);
+pub struct Transition(pub HashMap<(usize, u8), HashSet<usize>>);
 impl Transition {
-    pub fn eval(&self, state: usize, chr: char) -> HashSet<usize> {
+    pub fn eval(&self, state: usize, chr: u8) -> HashSet<usize> {
         self.0.get(&(state, chr)).unwrap().clone()
     }
 }

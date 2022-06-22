@@ -5,7 +5,7 @@ use std::collections::{HashMap, HashSet};
 pub struct NFAFrag {
     pub start: usize,
     pub accepts: HashSet<usize>,
-    pub map: HashMap<(usize, char), HashSet<usize>>,
+    pub map: HashMap<(usize, u8), HashSet<usize>>,
 }
 impl NFAFrag {
     pub fn new(start: usize) -> Self {
@@ -27,7 +27,7 @@ impl NFAFrag {
         }
         new
     }
-    pub fn connect(&mut self, from: usize, chr: char, to: usize) {
+    pub fn connect(&mut self, from: usize, chr: u8, to: usize) {
         if let Some(map_accepts) = self.map.get_mut(&(from, chr)) {
             map_accepts.insert(to);
         } else {

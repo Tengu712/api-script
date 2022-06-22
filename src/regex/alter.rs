@@ -13,8 +13,8 @@ impl RegexImpl for Alter {
         let (context, start) = context.next();
         let mut frag = NFAFrag::compose(&frag1, &frag2, start);
         frag.accepts = &frag1.accepts | &frag2.accepts;
-        frag.connect(start, '\0', frag1.start);
-        frag.connect(start, '\0', frag2.start);
+        frag.connect(start, 0, frag1.start);
+        frag.connect(start, 0, frag2.start);
         (context, frag)
     }
 }
