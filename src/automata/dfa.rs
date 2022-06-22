@@ -10,6 +10,7 @@ impl DFAutomata {
     pub fn from(nfa: &NFAutomata) -> Self {
         let map = nfa.get_map();
         let start_set = nfa.transition.get_epsilon_sets(&HashSet::from([nfa.start]));
+        let mut accepts = HashSet::new();
         let mut transition = Vec::new();
         let mut stack = Vec::new();
         let mut states = Vec::new();
@@ -18,6 +19,10 @@ impl DFAutomata {
         stack.push(start_set.clone());
         states.push(start_set);
         while let Some(set) = stack.pop() {
+            let trans_id_now = states.iter().position(|v| v == &set).unwrap() + 1;
+            if !set.is_disjoint(&nfa.accepts) {
+                accepts.insert(trans_id_now);
+            }
             for c in 1..255 {
                 let mut transed = HashSet::new();
                 for state in set.iter() {
@@ -26,7 +31,6 @@ impl DFAutomata {
                     }
                 }
                 if !transed.is_empty() {
-                    let trans_id_now = states.iter().position(|v| v == &set).unwrap() + 1;
                     if let Some(n) = states.iter().position(|v| v == &transed) {
                         transition[trans_id_now][c as usize] = n + 1;
                     } else {
@@ -40,8 +44,15 @@ impl DFAutomata {
         }
         Self {
             start: 1,
-            accepts: HashSet::new(),
+            accepts,
             transition,
         }
+    }
+    pub fn check(&self, trg: String) -> bool {
+        let mut state = self.start;
+        for c in trg.as_bytes() {
+            state = self.transition[state][*c as usize];
+        }
+        self.accepts.contains(&state)
     }
 }
