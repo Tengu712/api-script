@@ -12,6 +12,7 @@ impl RegexImpl for Alter {
         let (context, frag2) = self.1.assemble(context);
         let (context, start) = context.next();
         let mut frag = NFAFrag::compose(&frag1, &frag2, start);
+        frag.len = context.0;
         frag.accepts = &frag1.accepts | &frag2.accepts;
         frag.connect(start, 0, frag1.start);
         frag.connect(start, 0, frag2.start);

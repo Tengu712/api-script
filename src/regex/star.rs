@@ -11,6 +11,7 @@ impl RegexImpl for Star {
         let (context, frag_trg) = self.0.assemble(context);
         let (context, start) = context.next();
         let mut frag = NFAFrag::new(start);
+        frag.len = context.0;
         frag.accepts = frag_trg.accepts.clone();
         frag.accepts.insert(start);
         frag.map = frag_trg.map.clone();

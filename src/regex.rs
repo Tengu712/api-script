@@ -15,7 +15,7 @@ use super::automata::{nfa::NFAutomata, nfafrag::NFAFrag};
 use std::collections::VecDeque;
 
 /// A struct to generate a unique state id.
-struct Context(usize);
+pub struct Context(usize);
 impl Context {
     fn new() -> Self {
         Self(0)
@@ -26,7 +26,7 @@ impl Context {
     }
 }
 
-trait RegexImpl: std::fmt::Debug {
+pub trait RegexImpl: std::fmt::Debug {
     fn assemble(&self, context: Context) -> (Context, NFAFrag);
 }
 pub type Regex = Box<dyn RegexImpl>;

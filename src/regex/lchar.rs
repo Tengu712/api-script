@@ -11,6 +11,7 @@ impl RegexImpl for LChar {
         let (context, start) = context.next();
         let (context, end) = context.next();
         let mut frag = NFAFrag::new(start);
+        frag.len = context.0;
         frag.accepts.insert(end);
         frag.connect(start, self.0, end);
         (context, frag)

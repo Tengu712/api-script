@@ -1,8 +1,9 @@
 use super::nfa::*;
-use std::collections::{HashMap, HashSet};
+use super::*;
 
 /// A struct to build a nfa.
 pub struct NFAFrag {
+    pub len: usize,
     pub start: usize,
     pub accepts: HashSet<usize>,
     pub map: HashMap<(usize, u8), HashSet<usize>>,
@@ -10,6 +11,7 @@ pub struct NFAFrag {
 impl NFAFrag {
     pub fn new(start: usize) -> Self {
         Self {
+            len: 0,
             start,
             accepts: HashSet::new(),
             map: HashMap::new(),
@@ -38,6 +40,7 @@ impl NFAFrag {
     }
     pub fn build(self) -> NFAutomata {
         NFAutomata {
+            len: self.len,
             start: self.start,
             accepts: self.accepts,
             transition: Transition(self.map),

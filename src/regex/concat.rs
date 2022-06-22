@@ -11,6 +11,7 @@ impl RegexImpl for Concat {
         let (context, frag1) = self.0.assemble(context);
         let (context, frag2) = self.1.assemble(context);
         let mut frag = NFAFrag::compose(&frag1, &frag2, frag1.start);
+        frag.len = context.0;
         frag.accepts = frag2.accepts;
         for state in frag1.accepts.iter() {
             frag.connect(*state, 0, frag2.start);
