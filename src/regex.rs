@@ -36,7 +36,7 @@ pub fn parse_regex(restr: String) -> Regex {
     parser::expr(&mut parser::Token::from_restr(restr))
 }
 /// A function to parse regex btree to NFA.
-pub fn parse_nfa(regex: Regex) -> NFAutomata {
+pub fn parse_nfa<T: Clone>(regex: Regex, label: T) -> NFAutomata<T> {
     let (_, frag) = regex.assemble(Context::new());
-    frag.build()
+    frag.build(label)
 }

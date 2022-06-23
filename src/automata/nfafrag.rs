@@ -38,11 +38,15 @@ impl NFAFrag {
             self.map.insert((from, chr), map_accepts);
         }
     }
-    pub fn build(self) -> NFAutomata {
+    pub fn build<T: Clone>(self, label: T) -> NFAutomata<T> {
+        let mut accepts = HashMap::new();
+        for i in self.accepts {
+            accepts.insert(i, label.clone());
+        }
         NFAutomata {
             len: self.len,
             start: self.start,
-            accepts: self.accepts,
+            accepts,
             transition: Transition(self.map),
         }
     }

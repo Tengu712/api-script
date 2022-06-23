@@ -7,6 +7,7 @@ pub enum Token {
     OpStar,
     LParen,
     RParen,
+    Wildcard,
     Eps,
     Eof,
 }
@@ -27,6 +28,7 @@ impl Token {
                 '*' => tokens.push_back(Token::OpStar),
                 '(' => tokens.push_back(Token::LParen),
                 ')' => tokens.push_back(Token::RParen),
+                '_' => tokens.push_back(Token::Wildcard),
                 '$' => tokens.push_back(Token::Eps),
                 _ => tokens.push_back(Token::Character(c)),
             }
@@ -73,7 +75,9 @@ fn seq(tokens: &mut VecDeque<Token>) -> Regex {
 fn subseq(tokens: &mut VecDeque<Token>) -> Regex {
     let n = star(tokens);
     match tokens.front() {
-        Some(Token::LParen) | Some(Token::Character(_)) => Concat::new_box(n, subseq(tokens)),
+        Some(Token::LParen) | Some(Token::Character(_)) | Some(Token::Wildcard) => {
+            Concat::new_box(n, subseq(tokens))
+        }
         _ => n,
     }
 }
@@ -88,7 +92,7 @@ fn star(tokens: &mut VecDeque<Token>) -> Regex {
         _ => n,
     }
 }
-/// <factor> ::= '('<subexpr>')' | Character
+/// <factor> ::= '('<subexpr>')' | Character | Wildcard
 fn factor(tokens: &mut VecDeque<Token>) -> Regex {
     match tokens.front() {
         Some(Token::LParen) => {
@@ -101,6 +105,14 @@ fn factor(tokens: &mut VecDeque<Token>) -> Regex {
             let cloned = c.clone();
             consume_expect(tokens, Token::Character(cloned));
             LChar::new_box(cloned)
+        }
+        Some(Token::Wildcard) => {
+            consume_expect(tokens, Token::Wildcard);
+            let mut res: Regex = LChar::new_box(255);
+            for i in (1..254).rev() {
+                res = Alter::new_box(LChar::new_box(i), res);
+            }
+            res
         }
         n => panic!(
             "Syntax error in factor: {:?} found, but expected '(' or Charactor.",

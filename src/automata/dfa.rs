@@ -1,16 +1,17 @@
 use super::nfa::*;
 use super::*;
 
-pub struct DFAutomata {
+#[derive(Debug)]
+pub struct DFAutomata<T: Clone> {
     pub start: usize,
-    pub accepts: HashSet<usize>,
+    pub accepts: HashMap<usize, T>,
     pub transition: Vec<[usize; 256]>,
 }
-impl DFAutomata {
-    pub fn from(nfa: &NFAutomata) -> Self {
+impl<T: Clone> DFAutomata<T> {
+    pub fn from(nfa: &NFAutomata<T>) -> Self {
         let map = nfa.get_map();
         let start_set = nfa.transition.get_epsilon_sets(&HashSet::from([nfa.start]));
-        let mut accepts = HashSet::new();
+        let mut accepts = HashMap::new();
         let mut transition = Vec::new();
         let mut stack = Vec::new();
         let mut states = Vec::new();
@@ -20,8 +21,10 @@ impl DFAutomata {
         states.push(start_set);
         while let Some(set) = stack.pop() {
             let trans_id_now = states.iter().position(|v| v == &set).unwrap() + 1;
-            if !set.is_disjoint(&nfa.accepts) {
-                accepts.insert(trans_id_now);
+            for i in set.iter() {
+                if let Some(n) = nfa.get_accept_label(*i) {
+                    accepts.insert(trans_id_now, n.clone());
+                }
             }
             for c in 1..255 {
                 let mut transed = HashSet::new();
@@ -48,11 +51,40 @@ impl DFAutomata {
             transition,
         }
     }
-    pub fn check(&self, trg: String) -> bool {
+    /// Trans states until it warps, and return Some(last state).
+    /// If it cannot move any state, return None.
+    pub fn trans<I>(&self, trg: &mut std::iter::Peekable<I>) -> Option<(usize, String)>
+    where
+        I: Iterator<Item = u8>,
+    {
+        let mut buf = String::new();
+        let mut flag = false;
         let mut state = self.start;
-        for c in trg.as_bytes() {
-            state = self.transition[state][*c as usize];
+        while let Some(c) = trg.peek() {
+            let tmp = self.transition[state][*c as usize];
+            if tmp == 0 {
+                break;
+            } else {
+                buf.push(*c as char);
+                flag = true;
+                state = tmp;
+                let _ = trg.next();
+            }
         }
-        self.accepts.contains(&state)
+        if flag {
+            Some((state, buf))
+        } else {
+            None
+        }
+    }
+    pub fn start_with<I>(&self, trg: &mut std::iter::Peekable<I>) -> Option<(T, String)>
+    where
+        I: Iterator<Item = u8>,
+    {
+        if let Some((state, s)) = self.trans(trg) {
+            self.accepts.get(&state).map(|n| n.clone()).map(|n| (n, s))
+        } else {
+            None
+        }
     }
 }
