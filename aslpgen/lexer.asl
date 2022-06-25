@@ -25,5 +25,12 @@ U64             u64
 Nullptr         nullptr
 Str(String)     "_"
 Int(String)     [0-9]
-Float(String)   [0-9]+.[0-9]+
-Id(String)      [a-z|A-Z][a-z|A-Z|$_]
+Float(String)   [0-9][0-9]*.[0-9][0-9]*
+Id(String)      [a-z]|[A-Z][a-z]|[A-Z]|$_
+
+#fn take_indent(trg: String) -> usize {
+#    let mut chars = trg.chars();
+#    chars.next();
+#    chars.next_back();
+#    chars.as_str().parse().unwrap()
+#}

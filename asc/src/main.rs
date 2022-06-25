@@ -1,3 +1,5 @@
+mod preprocessor;
+
 use std::{
     fs::File,
     io::{BufRead, BufReader},
@@ -20,6 +22,8 @@ fn main() {
 }
 fn compile(src_path: &String) -> Result<(), String> {
     let reader = BufReader::new(File::open(Path::new(src_path)).unwrap());
-    let _ = reader.lines().map(|n| n.unwrap()).collect::<Vec<String>>();
+    let lines = reader.lines().map(|n| n.unwrap()).collect::<Vec<String>>();
+    let _ = preprocessor::preprocess(lines);
+    println!("{:?}", aslp::lexer::ACCEPTS);
     Ok(())
 }
