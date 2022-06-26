@@ -9,6 +9,6 @@ $ cargo new --lib aslp
 $ mv aslpgen/lexer.rs aslp/src/lexer.rs
 $ mv aslpgen/parser.rs aslp/src/parser.rs
 $ vim aslp/lib.rs
-mod lexer;
-mod parser;
+pub mod lexer;
+pub mod parser;
 ```

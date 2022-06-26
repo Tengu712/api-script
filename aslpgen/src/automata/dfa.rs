@@ -51,40 +51,4 @@ impl<T: Clone> DFAutomata<T> {
             transition,
         }
     }
-    /// Trans states until it warps, and return Some(last state).
-    /// If it cannot move any state, return None.
-    pub fn trans<I>(&self, trg: &mut std::iter::Peekable<I>) -> Option<(usize, String)>
-    where
-        I: Iterator<Item = u8>,
-    {
-        let mut buf = String::new();
-        let mut flag = false;
-        let mut state = self.start;
-        while let Some(c) = trg.peek() {
-            let tmp = self.transition[state][*c as usize];
-            if tmp == 0 {
-                break;
-            } else {
-                buf.push(*c as char);
-                flag = true;
-                state = tmp;
-                let _ = trg.next();
-            }
-        }
-        if flag {
-            Some((state, buf))
-        } else {
-            None
-        }
-    }
-    pub fn start_with<I>(&self, trg: &mut std::iter::Peekable<I>) -> Option<(T, String)>
-    where
-        I: Iterator<Item = u8>,
-    {
-        if let Some((state, s)) = self.trans(trg) {
-            self.accepts.get(&state).map(|n| n.clone()).map(|n| (n, s))
-        } else {
-            None
-        }
-    }
 }
