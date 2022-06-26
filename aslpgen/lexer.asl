@@ -1,5 +1,6 @@
 # System
-Space           $s$s
+Space           $s$s*
+Comment         #_*$n
 Newline         $n
 Indent(usize)   :[0-9]:
 
@@ -24,6 +25,6 @@ U64             u64
 # Data
 Nullptr         nullptr
 Str(String)     "_"
-Int(String)     [0-9]
+Int(String)     [0-9][0-9]*
 Float(String)   [0-9][0-9]*.[0-9][0-9]*
-Id(String)      [a-z]|[A-Z][a-z]|[A-Z]|$_
+Id(String)      ([a-z]|[A-Z][a-z]|[A-Z]|$_)([0-9]|[a-z]|[A-Z][a-z]|[A-Z]|$_)*

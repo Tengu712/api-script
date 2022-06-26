@@ -5,7 +5,10 @@ pub fn output(dfa: DFAutomata<usize>, labels: Vec<String>) -> Result<(), String>
         File::create(Path::new("./lexer.rs"))
             .map_err(|_| String::from("[Fatal error] lexer.rs not created."))?,
     );
-    write_lexer(&mut writer, String::from("use std::collections::HashMap;\n"))?;
+    write_lexer(
+        &mut writer,
+        String::from("use std::collections::HashMap;\n"),
+    )?;
     // Token
     write_lexer(&mut writer, String::from("#[derive(Debug, Clone)]\n"))?;
     write_lexer(&mut writer, String::from("pub enum Token {\n"))?;
@@ -53,48 +56,52 @@ pub fn output(dfa: DFAutomata<usize>, labels: Vec<String>) -> Result<(), String>
         write_lexer(&mut writer, format!("    {:?},\n", i))?;
     }
     write_lexer(&mut writer, String::from("];\n"))?;
-    // Methods
+    // RuntimeLexer
     write_lexer(
         &mut writer,
         String::from(
             "\
-pub fn create_accepts_map() -> HashMap<usize, Token> {
-    HashMap::from(ACCEPTS)
+pub struct RuntimeLexer {
+    accepts: HashMap<usize, Token>,
+    transition: Vec<&'static [usize; 256]>,
 }
-",
-        ),
-    )?;
-    write_lexer(
-        &mut writer,
-        String::from(
-            "\
-pub fn start_with<I>(
-    accepts: &HashMap<usize, Token>,
-    trg: &mut std::iter::Peekable<I>,
-) -> Option<(Token, String)>
-where
-    I: Iterator<Item = u8>,
-{
-    let mut buf = String::new();
-    let mut flag = false;
-    let mut state = START;
-    while let Some(c) = trg.peek() {
-        let tmp = TRANSITION[state][*c as usize];
-        if tmp == 0 {
-            break;
-        } else {
-            buf.push(*c as char);
-            flag = true;
-            state = tmp;
-            let _ = trg.next();
+impl RuntimeLexer {
+    pub fn new() -> Self {
+        let accepts = HashMap::from(ACCEPTS);
+        let mut transition = Vec::with_capacity(TRANSITION.len());
+        for i in &TRANSITION {
+            transition.push(i);
+        }
+        Self {
+            accepts,
+            transition,
         }
     }
-    if flag {
-        accepts.get(&state).map(|n| (n.clone(), buf))
-    } else {
-        None
+    pub fn start_with<I>(&self, trg: &mut std::iter::Peekable<I>) -> Option<(Token, String)>
+    where
+        I: Iterator<Item = u8>,
+    {
+        let mut buf = String::new();
+        let mut flag = false;
+        let mut state = START;
+        while let Some(c) = trg.peek() {
+            let tmp = self.transition[state][*c as usize];
+            if tmp == 0 {
+                break;
+            } else {
+                buf.push(*c as char);
+                flag = true;
+                state = tmp;
+                let _ = trg.next();
+            }
+        }
+        if flag {
+            self.accepts.get(&state).map(|n| (n.clone(), buf))
+        } else {
+            None
+        }
     }
-}
+}            
 ",
         ),
     )?;

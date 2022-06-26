@@ -1,32 +1,39 @@
-pub fn preprocess(lines: Vec<String>) -> Result<Vec<u8>, String> {
+pub fn preprocess(lines: Vec<String>) -> Vec<u8> {
     let mut res = Vec::new();
     for line in lines {
-        let len_prev = res.len();
-        let mut flag = 0;
-        for i in line.as_bytes() {
-            if flag == 0 && *i as char == ':' {
-                flag = -1;
+        process_line(line, &mut res);
+    }
+    res
+}
+fn process_line(line: String, res: &mut Vec<u8>) {
+    // Skip white line
+    if line.len() == 0 {
+        return;
+    }
+    let mut itr = line.as_bytes().iter();
+    // Detect indent
+    if line.as_bytes()[0] != ':' as u8 {
+        let mut cnt = 0;
+        while let Some(i) = itr.next() {
+            if *i == '#' as u8 {
+                return;
             }
-            if flag >= 0 && *i as char != ' ' && *i as char != '#' {
+            if *i != ' ' as u8 {
                 res.push(':' as u8);
-                res.extend(flag.to_string().as_bytes());
+                res.extend(cnt.to_string().as_bytes());
                 res.push(':' as u8);
                 res.push(' ' as u8);
-                flag = -1;
+                res.push(*i);
+                break;
             }
-            match *i as char {
-                '#' => break,
-                ' ' if flag >= 0 => {
-                    flag += 1;
-                }
-                _ => res.push(*i),
-            }
-        }
-        if len_prev != res.len() {
-            res.push('\n' as u8);
+            cnt += 1;
         }
     }
-    Ok(res)
+    // Push all
+    for i in itr {
+        res.push(*i);
+    }
+    res.push('\n' as u8);
 }
 
 #[test]
@@ -51,8 +58,8 @@ fun void hello_world
 :12: u32 0
 ";
     let lines = code.split('\n').map(|n| String::from(n)).collect();
-    let src_str = preprocess(lines).unwrap();
-    assert_eq!(src_str, expect.as_bytes());
+    let src_str = preprocess(lines);
+    assert_eq!(String::from_utf8(src_str).unwrap(), String::from(expect));
 }
 #[test]
 fn test2() {
@@ -68,7 +75,7 @@ fun void hello_world
 ";
     let expect = "\
 :0: fun void hello_world
-:4: logic 
+:4: logic #LOGIC#
 :7: call i32 user32.MessageBoxA
 :12: ptr nullptr
 :12: ptr \"Hello World!\"
@@ -76,6 +83,6 @@ fun void hello_world
 :12: u32 0
 ";
     let lines = code.split('\n').map(|n| String::from(n)).collect();
-    let src_str = preprocess(lines).unwrap();
-    assert_eq!(src_str, expect.as_bytes());
+    let src_str = preprocess(lines);
+    assert_eq!(String::from_utf8(src_str).unwrap(), String::from(expect));
 }
