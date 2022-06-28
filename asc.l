@@ -1,5 +1,6 @@
 %{
 #include <stdio.h>
+#include <string.h>
 #include "asc.tab.h"
 int g_curIndent = 0;
 int g_curLine = 1;
@@ -36,7 +37,7 @@ indent			" "*
 newline			\n|\r|\r\n
 comment			#.*{newline}
 int				0|[1-9][0-9]*
-id				[a-zA-Z_][0-9a-zA-Z_]+
+id				[a-zA-Z_][0-9a-zA-Z_]*
 
 %x code
 
@@ -94,11 +95,25 @@ id				[a-zA-Z_][0-9a-zA-Z_]+
 <code>f64					{ add_cur_chara(); return F64; }
 
 <code>nullptr				{ add_cur_chara(); return NULLPTR; }
-<code>\".*\"				{ add_cur_chara(); return STR; }
-<code>{int}					{ add_cur_chara(); return INT; }
-<code>{int}\.{int}			{ add_cur_chara(); return FLOAT; }
-<code>{id}					{ add_cur_chara(); return ID; }
-<code>{id}\.{id}			{ add_cur_chara(); return EXID; }
+<code>\".*\"				{ add_cur_chara(); yylval.data = strdup(yytext); return STR; }
+<code>{int}					{ add_cur_chara(); yylval.data = strdup(yytext); return INT; }
+<code>{int}\.{int}			{ add_cur_chara(); yylval.data = strdup(yytext); return FLOAT; }
+<code>{id}					{ add_cur_chara(); yylval.data = strdup(yytext); return ID; }
+<code>{id}\.{id}			{
+								add_cur_chara();
+								int i;
+								for (i = 0; i < strlen(yytext); ++i) {
+									if (yytext[i] == '.')
+										break;
+								}
+								char *s_libname = (char*)malloc(sizeof(char) * i);
+								char *s_id = (char*)malloc(sizeof(char) * (strlen(yytext) - i - 1));
+								strncpy(s_libname, yytext, i);
+								strncpy(s_id, yytext + i + 1, (strlen(yytext) - i - 1));
+								ExID tmp = { s_libname, s_id };
+								yylval.exid = tmp;
+								return EXID;
+							}
 
 <code>.						{
 								fprintf(

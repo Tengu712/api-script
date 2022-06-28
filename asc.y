@@ -22,10 +22,25 @@ void yyerror(char *msg) {
 }
 %}
 
+%code requires {
+	typedef struct ExID_t {
+		char* libname;
+		char* id;
+	} ExID;
+}
+
+%union {
+	char* data;
+	ExID exid;
+}
+
 %token EOFILE INDENT DEDENT
 %token FUN ARGS LOGIC CALL
 %token VOID PTR I8 I16 I32 I64 U8 U16 U32 U64 F32 F64
-%token NULLPTR STR INT FLOAT ID EXID 
+%token NULLPTR
+%token<data> STR INT FLOAT ID
+%token<exid> EXID
+%type<data> data type
 
 %%
 
@@ -34,13 +49,12 @@ blocks		:
 			| block blocks
 block		: function
 
-function	: FUN type			{ fprintf(g_pTarget, "type "); fprintf(g_pHeader, "type "); }
-			  ID				{ fprintf(g_pTarget, "id"); fprintf(g_pHeader, "id"); }
+function	: FUN type ID		{ fprintf(g_pTarget, "%s %s", $2, $3);	fprintf(g_pHeader, "%s %s", $2, $3); }
 			  funbody
-funbody		: INDENT			{ fprintf(g_pTarget, "("); fprintf(g_pHeader, "("); }
-			  args				{ fprintf(g_pTarget, ") {\n"); fprintf(g_pHeader, ");\n"); }
+funbody		: INDENT			{ fprintf(g_pTarget, "(");				fprintf(g_pHeader, "("); }
+			  args				{ fprintf(g_pTarget, ") {\n");			fprintf(g_pHeader, ");\n"); }
 			  logic DEDENT		{ fprintf(g_pTarget, "}\n"); }
-			| INDENT			{ fprintf(g_pTarget, "() {\n"); fprintf(g_pHeader, "();\n"); }
+			| INDENT			{ fprintf(g_pTarget, "() {\n");			fprintf(g_pHeader, "();\n"); }
 			  logic DEDENT		{ fprintf(g_pTarget, "}\n"); }
 args		: ARGS INDENT funarg DEDENT
 funarg		:					{ g_cntArg = 0; }
@@ -51,13 +65,13 @@ funarg		:					{ g_cntArg = 0; }
 									}
 									++g_cntArg;
 								}
-			  type ID			{ fprintf(g_pTarget, "type id"); fprintf(g_pHeader, "type id"); }
+			  type ID			{ fprintf(g_pTarget, "%s %s", $2, $3);	fprintf(g_pHeader, "%s %s", $2, $3); }
 			  funarg
 logic		: LOGIC INDENT call DEDENT
 
-call		: CALL type ID		{ fprintf(g_pTarget, "    callid"); }
+call		: CALL type ID		{ fprintf(g_pTarget, "    %s", $3); }
 			  callargs
-			| CALL type EXID 	{ fprintf(g_pTarget, "    callexid"); fprintf(g_pDefs, "type exid.1"); g_isCallExid = 1; }
+			| CALL type EXID 	{ fprintf(g_pTarget, "    %s", $3.id); fprintf(g_pDefs, "%s %s", $2, $3.id); g_isCallExid = 1; }
 			  callargs			{ g_isCallExid = 0; }
 callargs	:					{ fprintf(g_pTarget, "();\n");	if (g_isCallExid == 1) fprintf(g_pDefs, "();\n"); }
 			| INDENT			{ fprintf(g_pTarget, "(");		if (g_isCallExid == 1) fprintf(g_pDefs, "("); }
@@ -71,11 +85,23 @@ callarg		:					{ g_cntArg = 0; }
 									}
 									++g_cntArg;
 								}
-			  type data			{ fprintf(g_pTarget, "data");	if (g_isCallExid == 1) fprintf(g_pDefs, "type"); }
+			  type data			{ fprintf(g_pTarget, "%s", $3);	if (g_isCallExid == 1) fprintf(g_pDefs, "%s a%d", $2, g_cntArg); }
 			  callarg
 
-type		: VOID | PTR | I8 | I16 | I32 | I64 | U8 | U16 | U32 | U64 | F32 | F64
-data		: NULLPTR | STR | INT | FLOAT | ID
+type		: VOID		{ $$ = "void"; }
+			| PTR		{ $$ = "void*"; }
+			| I8		{ $$ = "char"; }
+			| I16		{ $$ = "short"; }
+			| I32		{ $$ = "int"; }
+			| I64		{ $$ = "long long"; }
+			| U8		{ $$ = "unsigned char"; }
+			| U16		{ $$ = "unsigned short"; }
+			| U32		{ $$ = "unsigned int"; }
+			| U64		{ $$ = "unsigned long long"; }
+			| F32		{ $$ = "float"; }
+			| F64		{ $$ = "double"; }
+data		: NULLPTR	{ $$ = "(void*)0"; }
+			| STR | INT | FLOAT | ID
 
 %%
 
