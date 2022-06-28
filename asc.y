@@ -1,10 +1,19 @@
 %{
 #include <stdio.h>
+#include <stdlib.h>
 int g_curLine;
 int g_curChar;
+FILE *yyin;
 int yylex();
 void yyerror(char *msg) {
-	fprintf(stderr, "\n[Parsing error] %s : %d line, %d char\n", msg, g_curLine, g_curChar);
+	fprintf(
+		stderr,
+		"\n\e[91m[Parsing error]\e[0m %s : %d line, %d char\n",
+		msg,
+		g_curLine,
+		g_curChar
+	);
+	exit(1);
 }
 %}
 
@@ -39,8 +48,20 @@ data		: NULLPTR | STR | INT | FLOAT | ID
 
 %%
 
-int main(void) {
+int main(int num_args, char **args) {
 	setbuf(stdout, NULL);
-	yyparse();
+	if (num_args < 2) {
+		fprintf(stderr, "\e[91m[Fatal error]\e[0m no input files.\n");
+		return 1;
+	}
+	for (int i = 1; i < num_args; ++i) {
+		FILE *p_file = fopen(args[i], "r");
+		if (p_file == NULL) {
+			fprintf(stderr, "\e[91m[IO error]\e[0m %s not opened.\n", args[i]);
+			return 1;
+		}
+		yyin = p_file;
+		yyparse();
+	}
 	return 0;
 }
