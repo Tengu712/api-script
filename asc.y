@@ -4,7 +4,7 @@ int g_curLine;
 int g_curChar;
 int yylex();
 void yyerror(char *msg) {
-	fprintf(stderr, "[Parsing error] %s : %d line, %d char\n", msg, g_curLine, g_curChar);
+	fprintf(stderr, "\n[Parsing error] %s : %d line, %d char\n", msg, g_curLine, g_curChar);
 }
 %}
 
@@ -20,7 +20,13 @@ program		: blocks EOFILE
 blocks		:
 			| block blocks
 block		: function
-function	: FUN type ID INDENT logic DEDENT
+
+function	: FUN type ID funbody
+funbody		: INDENT args logic DEDENT
+			| INDENT logic DEDENT
+args		: ARGS INDENT funarg DEDENT
+funarg		:
+			| type ID funarg
 logic		: LOGIC INDENT call DEDENT
 call		: CALL type functionid
 			| CALL type functionid INDENT callarg DEDENT
@@ -34,6 +40,7 @@ data		: NULLPTR | STR | INT | FLOAT | ID
 %%
 
 int main(void) {
+	setbuf(stdout, NULL);
 	yyparse();
 	return 0;
 }

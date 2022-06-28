@@ -14,7 +14,7 @@ void check_indent_error() {
 	if (yyleng % 4 != 0) {
 		fprintf(
 			stderr,
-			"[Syntax error] num of indent spaces must be multiples of 4. : %d line\n",
+			"\n\e[91m[Syntax error]\e[0m num of indent spaces must be multiples of 4. : %d line\n",
 			g_curLine
 		);
 		exit(1);
@@ -22,7 +22,7 @@ void check_indent_error() {
 	if (yyleng > g_curIndent && yyleng != g_curIndent + 4) {
 		fprintf(
 			stderr,
-			"[Syntax error] an indent must be 4 spaces. : %d -> %d : %d line\n",
+			"\n\e[91m[Syntax error]\e[0m an indent must be 4 spaces. : %d -> %d : %d line\n",
 			g_curIndent,
 			yyleng,
 			g_curChar
@@ -106,7 +106,7 @@ id				[a-zA-Z_][0-9a-zA-Z_]+
 <code>.						{
 								fprintf(
 									stderr,
-									"[Syntax error] invalid token. : %s : %d line, %d char\n",
+									"\n\e[91m[Syntax error]\e[0m invalid token. : %s : %d line, %d char\n",
 									yytext,
 									g_curLine,
 									g_curChar

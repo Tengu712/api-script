@@ -10,5 +10,7 @@ fun void hello_world
             ptr "title"
             u32 0
 fun void hello_wo
+    args
+        i32 aiu
     logic
         call void aiu
