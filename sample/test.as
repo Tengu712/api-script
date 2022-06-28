@@ -12,5 +12,6 @@ fun void hello_world
 fun void hello_wo
     args
         i32 aiu
+        ptr jj
     logic
         call void aiu
