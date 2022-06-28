@@ -1,8 +1,10 @@
 %{
 #include <stdio.h>
+int g_curLine;
+int g_curChar;
 int yylex();
 void yyerror(char *msg) {
-    fprintf(stderr, "parser error: %s\n", msg);
+    fprintf(stderr, "[Parsing error] %s : %d line, %d char\n", msg, g_curLine, g_curChar);
 }
 %}
 
