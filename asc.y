@@ -1,6 +1,7 @@
 %{
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 int g_curLine;
 int g_curChar;
 FILE *yyin;
@@ -18,7 +19,6 @@ void yyerror(char *msg) {
 		g_curLine,
 		g_curChar
 	);
-	exit(1);
 }
 %}
 
@@ -51,10 +51,11 @@ block		: function
 
 function	: FUN type ID		{ fprintf(g_pTarget, "%s %s", $2, $3);	fprintf(g_pHeader, "%s %s", $2, $3); }
 			  funbody
-funbody		: INDENT			{ fprintf(g_pTarget, "(");				fprintf(g_pHeader, "("); }
-			  args				{ fprintf(g_pTarget, ") {\n");			fprintf(g_pHeader, ");\n"); }
-			  logic DEDENT		{ fprintf(g_pTarget, "}\n"); }
+funbody		:					{ fprintf(g_pTarget, "() {}\n");		fprintf(g_pHeader, "();\n"); }
 			| INDENT			{ fprintf(g_pTarget, "() {\n");			fprintf(g_pHeader, "();\n"); }
+			  logic DEDENT		{ fprintf(g_pTarget, "}\n"); }
+			| INDENT			{ fprintf(g_pTarget, "(");				fprintf(g_pHeader, "("); }
+			  args				{ fprintf(g_pTarget, ") {\n");			fprintf(g_pHeader, ");\n"); }
 			  logic DEDENT		{ fprintf(g_pTarget, "}\n"); }
 args		: ARGS INDENT funarg DEDENT
 funarg		:					{ g_cntArg = 0; }
@@ -111,6 +112,22 @@ int main(int num_args, char **args) {
 		fprintf(stderr, "\e[91m[Fatal error]\e[0m no input files.\n");
 		return 1;
 	}
+	int opt_static_lib = 0;
+	int opt_left_tmpfiles = 0;
+	for (int i = 1; i < num_args; ++i) {
+		if (args[i][0] != '-')
+			continue;
+		if (strcmp(args[i], "-d") == 0)
+			opt_static_lib = 1;
+		else if (strcmp(args[i], "-a") == 0)
+			opt_left_tmpfiles = 1;
+		else {
+			fprintf(stderr, "\e[91m[Fatal error]\e[0m invalid option. : %s\n", args[i]);
+			return 1;
+		}
+	}
+
+	// Create output files
 	g_pDefs = fopen("a_.h", "w");
 	if (g_pDefs == NULL) {
 		fprintf(stderr, "\e[91m[IO error]\e[0m a header for definition of outer functions not created.\n");
@@ -129,18 +146,66 @@ int main(int num_args, char **args) {
 	fprintf(g_pTarget, "#include \"a_.h\"\n");
 	fprintf(g_pHeader, "#pragma once\n");
 	fprintf(g_pDefs, "#pragma once\n");
+
+	// Parsing and printing
+	int error = 0;
 	for (int i = 1; i < num_args; ++i) {
+		if (args[i][0] == '-')
+			continue;
 		FILE *p_file = fopen(args[i], "r");
 		if (p_file == NULL) {
 			fprintf(stderr, "\e[91m[IO error]\e[0m %s not opened.\n", args[i]);
-			return 1;
+			error = 1;
+			break;
 		}
 		yyin = p_file;
-		yyparse();
+		error = yyparse();
 		fclose(p_file);
+		if (error != 0)
+			break;
 	}
 	fclose(g_pDefs);
 	fclose(g_pTarget);
 	fclose(g_pHeader);
+
+	// If error remove all output file
+	if (error != 0) {
+#ifdef __linux__
+		system("rm a_.h a.c a.h");
+#elif _WIN32 || _WIN64
+		system("del a_.h a.c a.h");
+#endif
+		return 1;
+	}
+
+	// Comile based on compiler options
+	int res = 1;
+	if (opt_static_lib == 1) {
+		res = system("gcc -c a.c");
+		if (res == 0)
+			res = system("ar rcs a.a a.o");
+	} else {
+		res = system("gcc a.c");
+	}
+
+	// Remove tmp file
+	if (opt_left_tmpfiles == 1) {
+	} else if (opt_static_lib == 1) {
+#ifdef __linux__
+		system("rm a_.h a.c a.o");
+#elif _WIN32 || _WIN64
+		system("del a_.h a.c a.o");
+#endif
+	} else {
+#ifdef __linux__
+		system("rm a_.h a.c a.h");
+#elif _WIN32 || _WIN64
+		system("del a_.h a.c a.h");
+#endif
+	}
+    if (res != 0) {
+		fprintf(stderr, "\e[91m[IO error]\e[0m could not compiled.\n");
+		return 1;
+	}
 	return 0;
 }
