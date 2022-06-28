@@ -4,7 +4,7 @@ int g_curLine;
 int g_curChar;
 int yylex();
 void yyerror(char *msg) {
-    fprintf(stderr, "[Parsing error] %s : %d line, %d char\n", msg, g_curLine, g_curChar);
+	fprintf(stderr, "[Parsing error] %s : %d line, %d char\n", msg, g_curLine, g_curChar);
 }
 %}
 
@@ -34,6 +34,6 @@ data		: NULLPTR | STR | INT | FLOAT | ID
 %%
 
 int main(void) {
-    yyparse();
-    return 0;
+	yyparse();
+	return 0;
 }

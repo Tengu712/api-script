@@ -5,7 +5,7 @@ int g_curIndent = 0;
 int g_curLine = 1;
 int g_curChar = 1;
 void add_cur_chara() {
-    g_curChar += yyleng;
+	g_curChar += yyleng;
 }
 int yywrap(void) {
 	return 1;
@@ -13,10 +13,10 @@ int yywrap(void) {
 void check_indent_error() {
 	if (yyleng % 4 != 0) {
 		fprintf(
-            stderr,
-            "[Syntax error] num of indent spaces must be multiples of 4. : %d line\n",
-            g_curLine
-        );
+			stderr,
+			"[Syntax error] num of indent spaces must be multiples of 4. : %d line\n",
+			g_curLine
+		);
 		exit(1);
 	}
 	if (yyleng > g_curIndent && yyleng != g_curIndent + 4) {
@@ -25,7 +25,7 @@ void check_indent_error() {
 			"[Syntax error] an indent must be 4 spaces. : %d -> %d : %d line\n",
 			g_curIndent,
 			yyleng,
-            g_curChar
+			g_curChar
 		);
 		exit(1);
 	}
@@ -46,7 +46,7 @@ id				[a-zA-Z_][0-9a-zA-Z_]+
 <INITIAL>{indent}{newline}	{ g_curChar = 0; ++g_curLine; }
 <INITIAL>{indent}			{
 								check_indent_error();
-                                add_cur_chara();
+								add_cur_chara();
 								if (yyleng > g_curIndent) {
 									g_curIndent = yyleng;
 									printf("\nINDENT ");
@@ -104,15 +104,15 @@ id				[a-zA-Z_][0-9a-zA-Z_]+
 <code>{id}\.{id}			{ printf("EXID "); add_cur_chara(); return EXID; }
 
 <code>.						{
-                                fprintf(
-                                    stderr,
-                                    "[Syntax error] invalid token. : %s : %d line, %d char\n",
-                                    yytext,
-                                    g_curLine,
-                                    g_curChar
-                                );
-                                exit(1);
-                            }
+								fprintf(
+									stderr,
+									"[Syntax error] invalid token. : %s : %d line, %d char\n",
+									yytext,
+									g_curLine,
+									g_curChar
+								);
+								exit(1);
+							}
 <<EOF>>						{
 								if (g_curIndent == 0) {
 									printf("\nEOF\n");
