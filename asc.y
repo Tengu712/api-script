@@ -11,6 +11,34 @@ int g_isCallExid = 0;
 FILE *g_pDefs = NULL;
 FILE *g_pTarget = NULL;
 FILE *g_pHeader = NULL;
+typedef struct OLNArray_t {
+	int num;
+	int maxnum;
+	char **libnames;
+} OLNArray;
+OLNArray *g_pOLNames = NULL;
+void init_olnames() {
+	char **p_tmp = (char**)malloc(sizeof(char*) * 4);
+	memset(p_tmp, 0, sizeof(char*) * 4);
+	g_pOLNames = (OLNArray*)malloc(sizeof(OLNArray*));
+	g_pOLNames->num = 0;
+	g_pOLNames->maxnum = 4;
+	g_pOLNames->libnames = p_tmp;
+}
+void push_olname(char *libname) {
+	if (g_pOLNames == NULL)
+		init_olnames();
+	if (g_pOLNames->num >= g_pOLNames->maxnum) {
+		g_pOLNames->maxnum *= 2;
+		char **p_tmp = (char**)malloc(sizeof(char*) * g_pOLNames->maxnum);
+		memset(p_tmp, 0, sizeof(char*) * g_pOLNames->maxnum);
+		memcpy(p_tmp, g_pOLNames->libnames, sizeof(char*) * g_pOLNames->num);
+		free(g_pOLNames->libnames);
+		g_pOLNames->libnames = p_tmp;
+	}
+	g_pOLNames->libnames[g_pOLNames->num] = libname;
+	++g_pOLNames->num;
+}
 void yyerror(char *msg) {
 	fprintf(
 		stderr,
@@ -72,7 +100,12 @@ logic		: LOGIC INDENT call DEDENT
 
 call		: CALL type ID		{ fprintf(g_pTarget, "    %s", $3); }
 			  callargs
-			| CALL type EXID 	{ fprintf(g_pTarget, "    %s", $3.id); fprintf(g_pDefs, "%s %s", $2, $3.id); g_isCallExid = 1; }
+			| CALL type EXID 	{
+									fprintf(g_pTarget, "    %s", $3.id);
+									fprintf(g_pDefs, "%s %s", $2, $3.id);
+									push_olname($3.libname);
+									g_isCallExid = 1;
+								}
 			  callargs			{ g_isCallExid = 0; }
 callargs	:					{ fprintf(g_pTarget, "();\n");	if (g_isCallExid == 1) fprintf(g_pDefs, "();\n"); }
 			| INDENT			{ fprintf(g_pTarget, "(");		if (g_isCallExid == 1) fprintf(g_pDefs, "("); }
@@ -106,18 +139,30 @@ data		: NULLPTR	{ $$ = "(void*)0"; }
 
 %%
 
+void cat_olnames(char *command) {
+	if (g_pOLNames == NULL)
+		return;
+	for (int i = 0; i < g_pOLNames->num; ++i) {
+		strcat(command, "-l");
+		strcat(command, g_pOLNames->libnames[i]);
+		strcat(command, " ");
+	}
+}
 int main(int num_args, char **args) {
 	setbuf(stdout, NULL);
 	if (num_args < 2) {
 		fprintf(stderr, "\e[91m[Fatal error]\e[0m no input files.\n");
 		return 1;
 	}
+	int opt_not_build = 0;
 	int opt_static_lib = 0;
 	int opt_left_tmpfiles = 0;
 	for (int i = 1; i < num_args; ++i) {
 		if (args[i][0] != '-')
 			continue;
-		if (strcmp(args[i], "-d") == 0)
+		if (strcmp(args[i], "-c") == 0)
+			opt_not_build = 1;
+		else if (strcmp(args[i], "-d") == 0)
 			opt_static_lib = 1;
 		else if (strcmp(args[i], "-a") == 0)
 			opt_left_tmpfiles = 1;
@@ -178,14 +223,23 @@ int main(int num_args, char **args) {
 		return 1;
 	}
 
+	// If found -c option
+	if (opt_not_build == 1)
+		return 0;
+
 	// Comile based on compiler options
+	char command[1024] = "";
 	int res = 1;
 	if (opt_static_lib == 1) {
-		res = system("gcc -c a.c");
+		strcat(command, "gcc -c a.c ");
+		cat_olnames(command);
+		res = system(command);
 		if (res == 0)
 			res = system("ar rcs a.a a.o");
 	} else {
-		res = system("gcc a.c");
+		strcat(command, "gcc a.c ");
+		cat_olnames(command);
+		res = system(command);
 	}
 
 	// Remove tmp file
