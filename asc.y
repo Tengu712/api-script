@@ -154,13 +154,16 @@ int main(int num_args, char **args) {
 		fprintf(stderr, "\e[91m[Fatal error]\e[0m no input files.\n");
 		return 1;
 	}
+	int opt_print = 0;
 	int opt_not_build = 0;
 	int opt_static_lib = 0;
 	int opt_left_tmpfiles = 0;
 	for (int i = 1; i < num_args; ++i) {
 		if (args[i][0] != '-')
 			continue;
-		if (strcmp(args[i], "-c") == 0)
+		if (strcmp(args[i], "-p") == 0)
+			opt_print = 1;
+		else if (strcmp(args[i], "-c") == 0)
 			opt_not_build = 1;
 		else if (strcmp(args[i], "-d") == 0)
 			opt_static_lib = 1;
@@ -173,26 +176,36 @@ int main(int num_args, char **args) {
 	}
 
 	// Create output files
+	if (opt_print == 1) 
+		printf("Creating temporary files\n");
 	g_pDefs = fopen("a_.h", "w");
 	if (g_pDefs == NULL) {
 		fprintf(stderr, "\e[91m[IO error]\e[0m a header for definition of outer functions not created.\n");
 		return 1;
 	}
+	if (opt_print == 1) 
+		printf("    * a_.h\n");
 	g_pTarget = fopen("a.c", "w");
 	if (g_pTarget == NULL) {
 		fprintf(stderr, "\e[91m[IO error]\e[0m main source not created.\n");
 		return 1;
 	}
+	if (opt_print == 1) 
+		printf("    * a.c\n");
 	g_pHeader = fopen("a.h", "w");
 	if (g_pHeader == NULL) {
 		fprintf(stderr, "\e[91m[IO error]\e[0m main header not created.\n");
 		return 1;
 	}
+	if (opt_print == 1) 
+		printf("    * a.h\n");
 	fprintf(g_pTarget, "#include \"a_.h\"\n");
 	fprintf(g_pHeader, "#pragma once\n");
 	fprintf(g_pDefs, "#pragma once\n");
 
 	// Parsing and printing
+	if (opt_print == 1) 
+		printf("Parsing\n");
 	int error = 0;
 	for (int i = 1; i < num_args; ++i) {
 		if (args[i][0] == '-')
@@ -203,6 +216,8 @@ int main(int num_args, char **args) {
 			error = 1;
 			break;
 		}
+		if (opt_print == 1) 
+			printf("    * %s\n", args[i]);
 		yyin = p_file;
 		error = yyparse();
 		fclose(p_file);
@@ -228,21 +243,32 @@ int main(int num_args, char **args) {
 		return 0;
 
 	// Comile based on compiler options
+	if (opt_print == 1) 
+		printf("Compiling\n");
 	char command[1024] = "";
 	int res = 1;
 	if (opt_static_lib == 1) {
 		strcat(command, "gcc -c a.c ");
 		cat_olnames(command);
+		if (opt_print == 1) 
+			printf("    * %s\n", command);
 		res = system(command);
-		if (res == 0)
+		if (res == 0) {
+			if (opt_print == 1) 
+				printf("    * ar rcs a.a a.o\n");
 			res = system("ar rcs a.a a.o");
+		}
 	} else {
 		strcat(command, "gcc a.c ");
 		cat_olnames(command);
+		if (opt_print == 1) 
+			printf("    * %s\n", command);
 		res = system(command);
 	}
 
 	// Remove tmp file
+	if (opt_print == 1 && opt_left_tmpfiles == 0) 
+		printf("Removing temporary files\n");
 	if (opt_left_tmpfiles == 1) {
 	} else if (opt_static_lib == 1) {
 #ifdef __linux__
@@ -261,5 +287,8 @@ int main(int num_args, char **args) {
 		fprintf(stderr, "\e[91m[IO error]\e[0m could not compiled.\n");
 		return 1;
 	}
+
+	if (opt_print == 1) 
+		printf("All processes succeeded\n");
 	return 0;
 }
