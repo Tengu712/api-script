@@ -8,6 +8,8 @@ extern FILE *yyin;
 extern int yylex();
 int g_cntArg = 0;
 int g_isCallExid = 0;
+#define BUFSIZE 1204
+char s_buf[BUFSIZE] = ""; 
 FILE *g_pDefs = NULL;
 FILE *g_pTarget = NULL;
 FILE *g_pHeader = NULL;
@@ -68,7 +70,7 @@ void yyerror(char *msg) {
 %token NULLPTR
 %token<data> STR INT FLOAT ID
 %token<exid> EXID
-%type<data> data type
+%type<data> data type call
 
 %%
 
@@ -98,30 +100,60 @@ funarg		:					{ g_cntArg = 0; }
 			  funarg
 
 logics		: LOGIC INDENT logic DEDENT
-logic		: | call logic | return logic
+logic		:
+			| call				{ fprintf(g_pTarget, "    %s;\n", $1); }
+			  logic
+			| return logic
 return		: RETURN data		{ fprintf(g_pTarget, "    return %s;\n", $2); }
-call		: CALL type ID		{ fprintf(g_pTarget, "    %s", $3); }
-			  callargs
-			| CALL type EXID 	{
-									fprintf(g_pTarget, "    %s", $3.id);
+call		: CALL type ID		{
+									memset(s_buf, 0, sizeof(char) * BUFSIZE);
+									strcat(s_buf, $3);
+								}
+			  callargs			{
+									$$ = strdup(s_buf);
+			  					}
+			| CALL type EXID	{
+									g_isCallExid = 1;
 									fprintf(g_pDefs, "%s %s", $2, $3.id);
 									push_olname($3.libname);
-									g_isCallExid = 1;
+									memset(s_buf, 0, sizeof(char) * BUFSIZE);
+									strcat(s_buf, $3.id);
 								}
-			  callargs			{ g_isCallExid = 0; }
-callargs	:					{ fprintf(g_pTarget, "();\n");	if (g_isCallExid == 1) fprintf(g_pDefs, "();\n"); }
-			| INDENT			{ fprintf(g_pTarget, "(");		if (g_isCallExid == 1) fprintf(g_pDefs, "("); }
-			  callarg DEDENT	{ fprintf(g_pTarget, ");\n");	if (g_isCallExid == 1) fprintf(g_pDefs, ");\n"); }
+			  callargs			{
+									g_isCallExid = 0;
+									$$ = strdup(s_buf);
+								}
+callargs	:					{
+									if (g_isCallExid == 1)
+										fprintf(g_pDefs, "();\n");
+									strcat(s_buf, "()");
+								}
+			| INDENT			{
+									if (g_isCallExid == 1)
+										fprintf(g_pDefs, "(");
+									strcat(s_buf, "(");
+								}
+			  callarg DEDENT	{
+									if (g_isCallExid == 1)
+										fprintf(g_pDefs, ");\n");
+									strcat(s_buf, ")");
+								}
 callarg		:					{ g_cntArg = 0; }
 			|					{
 									if (g_cntArg != 0) {
-										fprintf(g_pTarget, ", ");
 										if (g_isCallExid == 1)
 											fprintf(g_pDefs, ", ");
+										strcat(s_buf, ", ");
 									}
 									++g_cntArg;
 								}
-			  type data			{ fprintf(g_pTarget, "%s", $3);	if (g_isCallExid == 1) fprintf(g_pDefs, "%s a%d", $2, g_cntArg); }
+			  type data			{
+									if (g_isCallExid == 1)
+										fprintf(g_pDefs, "%s a%d", $2, g_cntArg);
+									char s_tmp[1024] = "";
+									sprintf(s_tmp, "%s", $3);
+									strcat(s_buf, s_tmp);
+								}
 			  callarg
 
 type		: VOID		{ $$ = "void"; }
@@ -138,6 +170,7 @@ type		: VOID		{ $$ = "void"; }
 			| F64		{ $$ = "double"; }
 data		: NULLPTR	{ $$ = "(void*)0"; }
 			| STR | INT | FLOAT | ID
+			| call
 
 %%
 
