@@ -2,10 +2,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-int g_curLine;
-int g_curChar;
-FILE *yyin;
-int yylex();
+extern int g_curLine;
+extern int g_curChar;
+extern FILE *yyin;
+extern int yylex();
 int g_cntArg = 0;
 int g_isCallExid = 0;
 FILE *g_pDefs = NULL;
