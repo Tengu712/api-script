@@ -79,6 +79,7 @@ id				[a-zA-Z_][0-9a-zA-Z_]*
 <code>fun					{ add_cur_chara(); return FUN; }
 <code>args					{ add_cur_chara(); return ARGS; }
 <code>logic					{ add_cur_chara(); return LOGIC; }
+<code>return				{ add_cur_chara(); return RETURN; }
 <code>call					{ add_cur_chara(); return CALL; }
 
 <code>void					{ add_cur_chara(); return VOID; }

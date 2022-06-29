@@ -63,7 +63,7 @@ void yyerror(char *msg) {
 }
 
 %token EOFILE INDENT DEDENT
-%token FUN ARGS LOGIC CALL
+%token FUN ARGS LOGIC RETURN CALL
 %token VOID PTR I8 I16 I32 I64 U8 U16 U32 U64 F32 F64
 %token NULLPTR
 %token<data> STR INT FLOAT ID
@@ -81,10 +81,10 @@ function	: FUN type ID		{ fprintf(g_pTarget, "%s %s", $2, $3);	fprintf(g_pHeader
 			  funbody
 funbody		:					{ fprintf(g_pTarget, "() {}\n");		fprintf(g_pHeader, "();\n"); }
 			| INDENT			{ fprintf(g_pTarget, "() {\n");			fprintf(g_pHeader, "();\n"); }
-			  logic DEDENT		{ fprintf(g_pTarget, "}\n"); }
+			  logics DEDENT		{ fprintf(g_pTarget, "}\n"); }
 			| INDENT			{ fprintf(g_pTarget, "(");				fprintf(g_pHeader, "("); }
 			  args				{ fprintf(g_pTarget, ") {\n");			fprintf(g_pHeader, ");\n"); }
-			  logic DEDENT		{ fprintf(g_pTarget, "}\n"); }
+			  logics DEDENT		{ fprintf(g_pTarget, "}\n"); }
 args		: ARGS INDENT funarg DEDENT
 funarg		:					{ g_cntArg = 0; }
 			|					{ 
@@ -96,8 +96,10 @@ funarg		:					{ g_cntArg = 0; }
 								}
 			  type ID			{ fprintf(g_pTarget, "%s %s", $2, $3);	fprintf(g_pHeader, "%s %s", $2, $3); }
 			  funarg
-logic		: LOGIC INDENT call DEDENT
 
+logics		: LOGIC INDENT logic DEDENT
+logic		: | call logic | return logic
+return		: RETURN data		{ fprintf(g_pTarget, "    return %s;\n", $2); }
 call		: CALL type ID		{ fprintf(g_pTarget, "    %s", $3); }
 			  callargs
 			| CALL type EXID 	{
