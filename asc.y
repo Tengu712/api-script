@@ -4,13 +4,14 @@
 #include <string.h>
 extern int g_curLine;
 extern int g_curChar;
+extern int g_indentWidth;
 extern FILE *yyin;
 extern int yylex();
 int g_cntArg = 0;
 int g_isCallExid = 0;
 int g_cntIndent = 0;
 #define BUFSIZE 1204
-char s_buf[BUFSIZE] = ""; 
+char g_sBuf[BUFSIZE] = ""; 
 FILE *g_pDefs = NULL;
 FILE *g_pTarget = NULL;
 FILE *g_pHeader = NULL;
@@ -130,44 +131,44 @@ ifex		:
 			  logic DEDENT		{ dedent(); print_indent(); fprintf(g_pTarget, "}\n"); }
 			  ifex
 call		: CALL type ID		{
-									memset(s_buf, 0, sizeof(char) * BUFSIZE);
-									strcat(s_buf, $3);
+									memset(g_sBuf, 0, sizeof(char) * BUFSIZE);
+									strcat(g_sBuf, $3);
 								}
 			  callargs			{
-									$$ = strdup(s_buf);
+									$$ = strdup(g_sBuf);
 			  					}
 			| CALL type EXID	{
 									g_isCallExid = 1;
 									fprintf(g_pDefs, "%s %s", $2, $3.id);
 									push_olname($3.libname);
-									memset(s_buf, 0, sizeof(char) * BUFSIZE);
-									strcat(s_buf, $3.id);
+									memset(g_sBuf, 0, sizeof(char) * BUFSIZE);
+									strcat(g_sBuf, $3.id);
 								}
 			  callargs			{
 									g_isCallExid = 0;
-									$$ = strdup(s_buf);
+									$$ = strdup(g_sBuf);
 								}
 callargs	:					{
 									if (g_isCallExid == 1)
 										fprintf(g_pDefs, "();\n");
-									strcat(s_buf, "()");
+									strcat(g_sBuf, "()");
 								}
 			| INDENT			{
 									if (g_isCallExid == 1)
 										fprintf(g_pDefs, "(");
-									strcat(s_buf, "(");
+									strcat(g_sBuf, "(");
 								}
 			  callarg DEDENT	{
 									if (g_isCallExid == 1)
 										fprintf(g_pDefs, ");\n");
-									strcat(s_buf, ")");
+									strcat(g_sBuf, ")");
 								}
 callarg		:					{ g_cntArg = 0; }
 			|					{
 									if (g_cntArg != 0) {
 										if (g_isCallExid == 1)
 											fprintf(g_pDefs, ", ");
-										strcat(s_buf, ", ");
+										strcat(g_sBuf, ", ");
 									}
 									++g_cntArg;
 								}
@@ -176,7 +177,7 @@ callarg		:					{ g_cntArg = 0; }
 										fprintf(g_pDefs, "%s a%d", $2, g_cntArg);
 									char s_tmp[1024] = "";
 									sprintf(s_tmp, "%s", $3);
-									strcat(s_buf, s_tmp);
+									strcat(g_sBuf, s_tmp);
 								}
 			  callarg
 
@@ -228,6 +229,8 @@ int main(int num_args, char **args) {
 			opt_static_lib = 1;
 		else if (strcmp(args[i], "-a") == 0)
 			opt_left_tmpfiles = 1;
+		else if (args[i][1] == 'i' && args[i][2] >= '1' && args[i][2] <= '9')
+		    g_indentWidth = (int)args[i][2] - (int)'0';
 		else {
 			fprintf(stderr, "\e[91m[Fatal error]\e[0m invalid option. : %s\n", args[i]);
 			return 1;

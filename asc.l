@@ -5,31 +5,35 @@
 int g_curIndent = 0;
 int g_curLine = 1;
 int g_curChar = 1;
+int g_indentWidth = 2;
 void add_cur_chara() {
 	g_curChar += yyleng;
 }
 int yywrap(void) {
 	return 1;
 }
-void check_indent_error() {
-	if (yyleng % 4 != 0) {
+int check_indent_error() {
+	if (yyleng % g_indentWidth != 0) {
 		fprintf(
 			stderr,
-			"\e[91m[Syntax error]\e[0m num of indent spaces must be multiples of 4. : %d line\n",
+			"\e[91m[Syntax error]\e[0m num of indent spaces must be multiples of %d. : %d line\n",
+			g_indentWidth,
 			g_curLine
 		);
-		exit(1);
+		return 0;
 	}
-	if (yyleng > g_curIndent && yyleng != g_curIndent + 4) {
+	if (yyleng > g_curIndent && yyleng != g_curIndent + g_indentWidth) {
 		fprintf(
 			stderr,
-			"\e[91m[Syntax error]\e[0m an indent must be 4 spaces. : %d -> %d : %d line\n",
+			"\e[91m[Syntax error]\e[0m an indent must be %d spaces. : %d -> %d : %d line\n",
+			g_indentWidth,
 			g_curIndent,
 			yyleng,
 			g_curChar
 		);
-		exit(1);
+		return 0;
 	}
+	return 1;
 }
 %}
 
@@ -46,14 +50,15 @@ id				[a-zA-Z_][0-9a-zA-Z_]*
 <INITIAL>{indent}{comment}	|
 <INITIAL>{indent}{newline}	{ g_curChar = 0; ++g_curLine; }
 <INITIAL>{indent}			{
-								check_indent_error();
+								if (check_indent_error() == 0)
+								    yyterminate();
 								add_cur_chara();
 								if (yyleng > g_curIndent) {
 									g_curIndent = yyleng;
 									BEGIN code;
 									return INDENT;
 								} else if (yyleng < g_curIndent) {
-									g_curIndent -= 4;
+									g_curIndent -= g_indentWidth;
 									for (int i = 0; i < g_curIndent - yyleng; ++i) {
 										unput(' ');
 									}
@@ -68,7 +73,7 @@ id				[a-zA-Z_][0-9a-zA-Z_]*
 								if (g_curIndent == 0) {
 									BEGIN code;
 								} else {
-									g_curIndent -= 4;
+									g_curIndent -= g_indentWidth;
 									return DEDENT;
 								}
 							}
@@ -135,13 +140,13 @@ id				[a-zA-Z_][0-9a-zA-Z_]*
 									g_curLine,
 									g_curChar
 								);
-								exit(1);
+								yyterminate();
 							}
 <<EOF>>						{
 								if (g_curIndent == 0)
 									return EOFILE;
 								else {
-									g_curIndent -= 4;
+									g_curIndent -= g_indentWidth;
 									return DEDENT;
 								}
 							}
