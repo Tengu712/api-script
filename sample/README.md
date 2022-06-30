@@ -7,15 +7,16 @@
 int main() {}
 ```
 
-## 02.as
+## 02_let_return.as
 
 ```c
 #include "a_.h"
 int hoge() {
-    return 2;
+    int res = 2;
+    return res;
 }
 int main() {
-    sin(0.0);
     return hoge();
 }
+
 ```

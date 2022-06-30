@@ -101,10 +101,12 @@ funarg		:					{ g_cntArg = 0; }
 
 logics		: LOGIC INDENT logic DEDENT
 logic		:
+			| return logic
+			| let logic
 			| call				{ fprintf(g_pTarget, "    %s;\n", $1); }
 			  logic
-			| return logic
 return		: RETURN data		{ fprintf(g_pTarget, "    return %s;\n", $2); }
+let			: type ID data		{ fprintf(g_pTarget, "    %s %s = %s;\n", $1, $2, $3); }
 call		: CALL type ID		{
 									memset(s_buf, 0, sizeof(char) * BUFSIZE);
 									strcat(s_buf, $3);
