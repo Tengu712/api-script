@@ -13,3 +13,6 @@ test () {
 test 01_empty_program
 test 02_let_return
 test 03_if
+rm a_.h
+rm a.c
+rm a.h
