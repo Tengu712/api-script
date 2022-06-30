@@ -1,4 +1,3 @@
-#
 fun i32 hoge
     logic
         i32 res 2

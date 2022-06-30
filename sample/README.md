@@ -2,21 +2,12 @@
 
 ## 01_empty_program.as
 
-```c
-#include "a_.h"
-int main() {}
-```
+スケルトンコード。
 
 ## 02_let_return.as
 
-```c
-#include "a_.h"
-int hoge() {
-    int res = 2;
-    return res;
-}
-int main() {
-    return hoge();
-}
+変数、複数の関数、値の返却。
 
-```
+## 03_if.as
+
+条件分岐。

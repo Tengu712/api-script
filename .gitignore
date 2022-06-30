@@ -2,9 +2,9 @@ asc.tab.h
 asc.tab.c
 lex.yy.c
 asc
-a.a
-a.o
 a.out
-a_.h
-a.c
-a.h
+/a.a
+/a.o
+/a_.h
+/a.c
+/a.h

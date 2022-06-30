@@ -8,6 +8,7 @@ extern FILE *yyin;
 extern int yylex();
 int g_cntArg = 0;
 int g_isCallExid = 0;
+int g_cntIndent = 0;
 #define BUFSIZE 1204
 char s_buf[BUFSIZE] = ""; 
 FILE *g_pDefs = NULL;
@@ -41,6 +42,17 @@ void push_olname(char *libname) {
 	g_pOLNames->libnames[g_pOLNames->num] = libname;
 	++g_pOLNames->num;
 }
+void indent() {
+	++g_cntIndent;
+}
+void dedent() {
+	--g_cntIndent;
+}
+void print_indent() {
+	for (int i = 0; i < g_cntIndent; ++i) {
+		fprintf(g_pTarget, "    ");
+	}
+}
 void yyerror(char *msg) {
 	fprintf(
 		stderr,
@@ -65,16 +77,16 @@ void yyerror(char *msg) {
 }
 
 %token EOFILE INDENT DEDENT
-%token FUN ARGS LOGIC RETURN CALL
+%token FUN ARGS LOGIC RETURN CALL IF ELIF ELSE
 %token VOID PTR I8 I16 I32 I64 U8 U16 U32 U64 F32 F64
 %token NULLPTR
-%token<data> STR INT FLOAT ID
+%token<data> STR INT FLOAT ID INLINE
 %token<exid> EXID
 %type<data> data type call
 
 %%
 
-program		: blocks EOFILE	{ return 0; }
+program		: blocks EOFILE		{ return 0; }
 blocks		:
 			| block blocks
 block		: function
@@ -82,11 +94,11 @@ block		: function
 function	: FUN type ID		{ fprintf(g_pTarget, "%s %s", $2, $3);	fprintf(g_pHeader, "%s %s", $2, $3); }
 			  funbody
 funbody		:					{ fprintf(g_pTarget, "() {}\n");		fprintf(g_pHeader, "();\n"); }
-			| INDENT			{ fprintf(g_pTarget, "() {\n");			fprintf(g_pHeader, "();\n"); }
-			  logics DEDENT		{ fprintf(g_pTarget, "}\n"); }
+			| INDENT			{ fprintf(g_pTarget, "() {\n");			fprintf(g_pHeader, "();\n");	indent(); }
+			  logics DEDENT		{ fprintf(g_pTarget, "}\n");											dedent(); }
 			| INDENT			{ fprintf(g_pTarget, "(");				fprintf(g_pHeader, "("); }
-			  args				{ fprintf(g_pTarget, ") {\n");			fprintf(g_pHeader, ");\n"); }
-			  logics DEDENT		{ fprintf(g_pTarget, "}\n"); }
+			  args				{ fprintf(g_pTarget, ") {\n");			fprintf(g_pHeader, ");\n");		indent(); }
+			  logics DEDENT		{ fprintf(g_pTarget, "}\n");											dedent(); }
 args		: ARGS INDENT funarg DEDENT
 funarg		:					{ g_cntArg = 0; }
 			|					{ 
@@ -103,10 +115,20 @@ logics		: LOGIC INDENT logic DEDENT
 logic		:
 			| return logic
 			| let logic
-			| call				{ fprintf(g_pTarget, "    %s;\n", $1); }
+			| if logic
+			| call				{ print_indent(); fprintf(g_pTarget, "%s;\n", $1); }
 			  logic
-return		: RETURN data		{ fprintf(g_pTarget, "    return %s;\n", $2); }
-let			: type ID data		{ fprintf(g_pTarget, "    %s %s = %s;\n", $1, $2, $3); }
+return		: RETURN data		{ print_indent(); fprintf(g_pTarget, "return %s;\n", $2); }
+let			: type ID data		{ print_indent(); fprintf(g_pTarget, "%s %s = %s;\n", $1, $2, $3); }
+if			: IF INLINE INDENT	{ print_indent(); indent(); fprintf(g_pTarget, "if (%s) {\n", $2); }
+			  logic DEDENT		{ dedent(); print_indent(); fprintf(g_pTarget, "}\n"); }
+			  ifex
+ifex		:
+			| ELSE INDENT		{ print_indent(); indent(); fprintf(g_pTarget, "else {\n");	}
+			  logic DEDENT		{ dedent(); print_indent(); fprintf(g_pTarget, "}\n"); }
+			| ELIF INLINE INDENT{ print_indent(); indent(); fprintf(g_pTarget, "else if (%s) {\n", $2);	}
+			  logic DEDENT		{ dedent(); print_indent(); fprintf(g_pTarget, "}\n"); }
+			  ifex
 call		: CALL type ID		{
 									memset(s_buf, 0, sizeof(char) * BUFSIZE);
 									strcat(s_buf, $3);

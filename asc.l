@@ -39,7 +39,7 @@ comment			#.*{newline}
 int				0|[1-9][0-9]*
 id				[a-zA-Z_][0-9a-zA-Z_]*
 
-%x code
+%x code inline_s
 
 %%
 
@@ -75,12 +75,23 @@ id				[a-zA-Z_][0-9a-zA-Z_]*
 <code>" "+					{ add_cur_chara(); }
 <code>{comment}				|
 <code>{newline}				{ g_curChar = 0; ++g_curLine; BEGIN INITIAL; }
+<code>"("					{ add_cur_chara(); BEGIN inline_s; }
+<inline_s>.*")"				{
+								add_cur_chara();
+								yytext[yyleng - 1] = '\0';
+								yylval.data = yytext;
+								BEGIN code;
+								return INLINE;
+							}
 
 <code>fun					{ add_cur_chara(); return FUN; }
 <code>args					{ add_cur_chara(); return ARGS; }
 <code>logic					{ add_cur_chara(); return LOGIC; }
 <code>return				{ add_cur_chara(); return RETURN; }
 <code>call					{ add_cur_chara(); return CALL; }
+<code>if					{ add_cur_chara(); return IF; }
+<code>elif					{ add_cur_chara(); return ELIF; }
+<code>else					{ add_cur_chara(); return ELSE; }
 
 <code>void					{ add_cur_chara(); return VOID; }
 <code>ptr					{ add_cur_chara(); return PTR; }
