@@ -41,7 +41,7 @@ indent			" "*
 newline			\n|\r|\r\n
 comment			#.*{newline}
 int				0|[1-9][0-9]*
-id				[a-zA-Z_][0-9a-zA-Z_]*
+id				[a-zA-Z][0-9a-zA-Z_]*
 
 %x code inline_s
 
